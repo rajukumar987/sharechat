@@ -444,7 +444,7 @@ const userMobile = getLocalStorage("userMobile", "");
 const userUsername = getLocalStorage("userUsername", "ShareChat User");
 
 // Update display with actual values
-document.getElementById("amountDisplay").textContent = '&#8377;' + paymentAmount;
+document.getElementById("amountDisplay").innerText = '₹' + paymentAmount;
 document.getElementById("bonusDisplay").textContent = paymentCoins;
 
 // DOM Elements
@@ -481,7 +481,7 @@ function generateQRCodeWithAmount(amount) {
   
   // Create image element
   const img = new Image();
-  img.alt = 'QR Code for &#8377;' + amount;
+  img.alt = 'QR Code for ₹' + amount;
   img.style.borderRadius = '12px';
   img.style.width = '100%';
   img.style.height = '100%';
@@ -561,7 +561,7 @@ copyBtn.addEventListener('click', async () => {
   try {
     await navigator.clipboard.writeText(upiIdElement.innerText);
     const originalText = copyBtn.innerText;
-    copyBtn.innerText = "&#10003; Copied";
+    copyBtn.innerText = "✓ Copied";
     copyBtn.style.color = "#059669";
     
     setTimeout(() => {
@@ -578,7 +578,7 @@ copyBtn.addEventListener('click', async () => {
     document.body.removeChild(textArea);
     
     const originalText = copyBtn.innerText;
-    copyBtn.innerText = "&#10003; Copied";
+    copyBtn.innerText = "✓ Copied";
     copyBtn.style.color = "#059669";
     
     setTimeout(() => {
