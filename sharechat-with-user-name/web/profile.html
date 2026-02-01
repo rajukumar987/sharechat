@@ -784,6 +784,45 @@
   </div>
 
   <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const storedData = localStorage.getItem("fetchedProfileData");
+      const username = localStorage.getItem("userUsername");
+
+      if (!storedData) {
+        alert("Session expired. Please login again.");
+        window.location.href = "/";
+        return;
+      }
+
+      const profile = JSON.parse(storedData);
+
+      // Update UI instantly
+      document.getElementById("userNameDisplay").innerText =
+        profile.name || username || "ShareChat User";
+
+      document.getElementById("userHandleDisplay").innerText =
+        "@" + (profile.username || username || "user");
+
+      document.getElementById("followersCount").innerText =
+        profile.followers || "0";
+
+      document.getElementById("followingCount").innerText =
+        profile.following || "0";
+
+      document.getElementById("postsCount").innerText =
+        profile.posts || "0";
+
+      if (profile.profile_pic) {
+        document.getElementById("userProfileImage").src = profile.profile_pic;
+      }
+    });
+
+    // Logout function
+    function logout() {
+      localStorage.clear();
+      window.location.href = "/";
+    }
+
     // Improved JavaScript with better Android compatibility
     'use strict';
     
