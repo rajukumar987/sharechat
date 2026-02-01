@@ -719,7 +719,11 @@ class ShareChatLiveFetcher:
             
             def log_message(self, format, *args):
                 # Disable default logging to keep console clean
-                pass
+                # Instead use parent logger
+                if self.parent:
+                    self.parent.logger.info(f"{self.address_string()} - {format % args}")
+                else:
+                    print(f"{self.address_string()} - {format % args}")
         
         try:
             # Create server - Render के लिए 0.0.0.0 use करें
@@ -734,35 +738,41 @@ class ShareChatLiveFetcher:
                 actual_url = os.environ.get("RENDER_EXTERNAL_URL", f"http://localhost:{self.server_port}")
                 
                 self.logger.info(f"🚀 Server started on {self.server_host}:{self.server_port}")
-                print(f"\n🌐 Server running at: {actual_url}")
-                print(f"📱 Open this URL in your browser")
-                print(f"🔄 Press Ctrl+C to stop the server\n")
+                self.logger.info(f"🌐 Access URL: {actual_url}")
                 
-                # Server loop
+                print(f"\n{'='*60}")
+                print("🚀 SHARECHAT LIVE PROFILE FETCHER")
+                print("="*60)
+                print(f"Server running at: {actual_url}")
+                print(f"Host: {self.server_host}")
+                print(f"Port: {self.server_port}")
+                print(f"Web directory: {self.web_dir}")
+                print(f"Data directory: {self.data_dir}")
+                print("="*60)
+                print("📱 Open the above URL in your browser")
+                print("🔄 Server is ready to accept requests")
+                print("="*60 + "\n")
+                
+                # Server loop - इसे forever run करना है
                 try:
                     while self.is_running:
                         self.server.handle_request()
                 except Exception as e:
                     if self.is_running:  # Only log if we're supposed to be running
                         self.logger.error(f"Server error: {e}")
+                finally:
+                    self.logger.info("Server loop ended")
             
             # Start server in separate thread
             self.server_thread = threading.Thread(target=run_server, daemon=True)
             self.server_thread.start()
             
             # Give server time to start
-            time.sleep(1)
+            time.sleep(2)
             
-            # Only open browser if running locally
-            if not os.environ.get("RENDER"):
-                try:
-                    webbrowser.open(f'http://localhost:{self.server_port}')
-                except:
-                    print(f"⚠️ Could not open browser automatically")
-                    print(f"Please open manually: http://localhost:{self.server_port}")
-            else:
-                print("🚀 Running on Render Cloud Platform")
-                print(f"✅ Your app will be available at: {os.environ.get('RENDER_EXTERNAL_URL', 'Your Render URL')}")
+            # Log that server is ready
+            self.logger.info("✅ Server initialization complete")
+            print("✅ Server initialization complete")
             
             return True
             
@@ -792,10 +802,9 @@ class ShareChatLiveFetcher:
                 
                 self.server.shutdown()
                 self.server.server_close()
-            except:
-                pass
-            
-            self.logger.info("Server stopped")
+                self.logger.info("Server stopped")
+            except Exception as e:
+                self.logger.error(f"Error stopping server: {e}")
     
     def fetch_profile_api(self, username, phone=None):
         """
@@ -1012,211 +1021,118 @@ class ShareChatLiveFetcher:
                         ])
             
             print(f"✅ CSV exported: {csv_file}")
-    
-    def show_dashboard(self):
-        """
-        Dashboard show करें
-        """
-        actual_url = os.environ.get("RENDER_EXTERNAL_URL", f"http://localhost:{self.server_port}")
-        
-        print("\n" + "=" * 70)
-        print("📱 SHARECHAT LIVE PROFILE FETCHER")
-        print("=" * 70)
-        print("Status: Server running")
-        print(f"URL: {actual_url}")
-        print(f"Host: {self.server_host}")
-        print(f"Port: {self.server_port}")
-        print(f"Data directory: {self.data_dir}")
-        print(f"Exports directory: {self.exports_dir}")
-        print("=" * 70)
-        print("\n📋 Options:")
-        print("1. View fetched profiles")
-        print("2. Export results")
-        print("3. Clear current results")
-        print("4. Stop server and exit")
-        print("=" * 70)
-    
-    def run_interactive(self):
-        """
-        Interactive mode run करें
-        """
-        # Start server
-        if not self.start_server():
-            print("❌ Failed to start server!")
-            return
-        
-        try:
-            while True:
-                self.show_dashboard()
-                
-                choice = input("\nSelect option (1-4): ").strip()
-                
-                if choice == "1":
-                    # View fetched profiles
-                    if self.current_results:
-                        print(f"\n📊 Total profiles fetched: {len(self.current_results)}")
-                        print("-" * 50)
-                        
-                        success_count = sum(1 for r in self.current_results if r.get('status') == 'SUCCESS')
-                        failed_count = len(self.current_results) - success_count
-                        
-                        print(f"✅ Successful: {success_count}")
-                        print(f"❌ Failed: {failed_count}")
-                        
-                        if success_count > 0:
-                            print("\nLast 5 successful profiles:")
-                            for i, result in enumerate(self.current_results[-5:], 1):
-                                if result.get('status') == 'SUCCESS':
-                                    data = result.get('data', {})
-                                    print(f"{i}. {result['username']} - {data.get('name', 'N/A')} ({data.get('followers', '0')} followers)")
-                    else:
-                        print("\nℹ️ No profiles fetched yet!")
-                
-                elif choice == "2":
-                    # Export results
-                    if self.current_results:
-                        print("\n📤 Export options:")
-                        print("1. Export as JSON")
-                        print("2. Export as CSV")
-                        print("3. Export both")
-                        
-                        export_choice = input("\nSelect format (1-3): ").strip()
-                        
-                        if export_choice == "1":
-                            self.export_results('json')
-                        elif export_choice == "2":
-                            self.export_results('csv')
-                        elif export_choice == "3":
-                            self.export_results('both')
-                        else:
-                            print("❌ Invalid choice!")
-                    else:
-                        print("❌ No results to export!")
-                
-                elif choice == "3":
-                    # Clear results
-                    confirm = input("\n⚠️ Clear all current results? (yes/no): ").strip().lower()
-                    if confirm == 'yes':
-                        self.current_results = []
-                        print("✅ Results cleared!")
-                
-                elif choice == "4":
-                    # Exit
-                    print("\n🛑 Stopping server...")
-                    break
-                
-                else:
-                    print("❌ Invalid choice!")
-                
-                input("\nPress Enter to continue...")
-                print("\n" * 2)
-        
-        except KeyboardInterrupt:
-            print("\n\n🛑 Interrupted by user")
-        
-        finally:
-            self.stop_server()
-            print("✅ Server stopped")
-            
-            # Final export prompt
-            if self.current_results:
-                export = input("\nExport results before exiting? (y/n): ").strip().lower()
-                if export == 'y':
-                    self.export_results('both')
 
 def main():
     """
-    Main function
+    Main function for Render deployment
     """
-    print("=" * 70)
-    print("🚀 SHARECHAT LIVE PROFILE FETCHER")
-    print("=" * 70)
-    print("This tool will:")
-    print("1. Start a local web server")
-    print("2. Fetch profiles in real-time")
-    print("3. Display results in console")
-    print("=" * 70)
+    print("\n" + "="*70)
+    print("🚀 SHARECHAT LIVE PROFILE FETCHER - RENDER DEPLOYMENT")
+    print("="*70)
     
     # Check if running on Render
-    if os.environ.get("RENDER"):
+    is_render = os.environ.get("RENDER") is not None
+    port = os.environ.get("PORT", "8080")
+    
+    if is_render:
         print("✅ Running on Render Cloud Platform")
-        print("🌐 Your app will be available at your Render URL")
+        print(f"📦 PORT: {port}")
+        print(f"🌐 External URL: {os.environ.get('RENDER_EXTERNAL_URL', 'Not set')}")
     else:
         print("✅ Running locally")
+        print(f"📦 PORT: {port}")
     
     # Check requirements
     try:
         import requests
-        print("✅ Dependencies check: PASSED")
+        print("✅ Dependencies: requests installed")
     except ImportError:
         print("❌ Please install requests: pip install requests")
         return
     
-    # Create and run fetcher
+    print("="*70)
+    
+    # Create fetcher
     fetcher = ShareChatLiveFetcher()
     
-    # On Render, run server directly without interactive mode
-    if os.environ.get("RENDER"):
-        print("\n🚀 Starting server for Render deployment...")
-        print("📱 Open your browser to your Render URL")
+    # Start server
+    if fetcher.start_server():
+        print("\n✅ Server started successfully!")
+        print("📱 Open your browser to access the web interface")
         
-        # Start server and keep it running
-        if fetcher.start_server():
-            try:
+        try:
+            # On Render, keep the main thread alive
+            # On local, optionally run interactive mode
+            if not is_render:
+                # Local: ask if user wants interactive mode
+                choice = input("\nRun in interactive mode? (y/n): ").strip().lower()
+                if choice == 'y':
+                    # Simple interactive loop
+                    while True:
+                        print("\n" + "="*50)
+                        print("📊 Options:")
+                        print("1. View fetched profiles")
+                        print("2. Export results")
+                        print("3. Clear current results")
+                        print("4. Exit")
+                        print("="*50)
+                        
+                        opt = input("\nSelect option (1-4): ").strip()
+                        
+                        if opt == "1":
+                            if fetcher.current_results:
+                                print(f"\n📊 Total profiles: {len(fetcher.current_results)}")
+                                success = sum(1 for r in fetcher.current_results if r.get('status') == 'SUCCESS')
+                                print(f"✅ Successful: {success}")
+                                print(f"❌ Failed: {len(fetcher.current_results) - success}")
+                            else:
+                                print("\nℹ️ No profiles fetched yet!")
+                        
+                        elif opt == "2":
+                            if fetcher.current_results:
+                                fetcher.export_results('both')
+                            else:
+                                print("❌ No results to export!")
+                        
+                        elif opt == "3":
+                            confirm = input("\nClear all results? (yes/no): ").strip().lower()
+                            if confirm == 'yes':
+                                fetcher.current_results = []
+                                print("✅ Results cleared!")
+                        
+                        elif opt == "4":
+                            print("\n🛑 Stopping server...")
+                            break
+                        
+                        else:
+                            print("❌ Invalid option!")
+            else:
+                # On Render, just keep running
+                print("\n🔄 Server running... Press Ctrl+C to stop")
+                print("📝 Logs are being written to data/sharechat.log")
+                
                 # Keep the main thread alive
-                while True:
-                    time.sleep(1)
-            except KeyboardInterrupt:
-                fetcher.stop_server()
-                print("\n✅ Server stopped")
+                try:
+                    while True:
+                        time.sleep(1)
+                except KeyboardInterrupt:
+                    print("\n🛑 Interrupted by user")
+        
+        except KeyboardInterrupt:
+            print("\n🛑 Interrupted by user")
+        
+        finally:
+            fetcher.stop_server()
+            print("✅ Server stopped")
+            
+            # Final export prompt
+            if fetcher.current_results and not is_render:
+                export = input("\nExport results before exiting? (y/n): ").strip().lower()
+                if export == 'y':
+                    fetcher.export_results('both')
     else:
-        # Run in interactive mode locally
-        fetcher.run_interactive()
-
-# Alternative: Manual file placement
-def setup_files_manually():
-    """
-    Manual file setup instructions
-    """
-    print("=" * 70)
-    print("📁 MANUAL FILE SETUP")
-    print("=" * 70)
-    
-    # Get paths
-    base_dir = os.path.dirname(os.path.abspath(__file__))
-    web_dir = os.path.join(base_dir, "web")
-    
-    print(f"\n1. Create the web directory:")
-    print(f"   mkdir -p {web_dir}")
-    
-    print(f"\n2. Place your index.html file in:")
-    print(f"   {web_dir}/index.html")
-    
-    print(f"\n3. Your index.html should:")
-    print("   - Have phone and username inputs")
-    print("   - Submit to /fetch-profile endpoint")
-    print("   - Use the JavaScript code from this tool")
-    
-    print(f"\n4. Run the tool:")
-    print("   python app.py")
-    
-    print("\n5. Open browser to your Render URL")
+        print("❌ Failed to start server!")
 
 if __name__ == "__main__":
-    # Check if web directory exists and has index.html
-    base_dir = os.path.dirname(os.path.abspath(__file__))
-    web_dir = os.path.join(base_dir, "web")
-    index_path = os.path.join(web_dir, "index.html")
-    
-    if os.path.exists(index_path):
-        print("✅ Found your index.html file")
-        main()
-    else:
-        print("⚠️ Your index.html not found in web/ directory")
-        setup_files_manually()
-        
-        # Ask if user wants to create default
-        create_default = input("\nCreate default index.html? (y/n): ").strip().lower()
-        if create_default == 'y':
-            fetcher = ShareChatLiveFetcher()
-            main()
+    # Direct execution without file checks
+    main()
