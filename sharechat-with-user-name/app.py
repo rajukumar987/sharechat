@@ -35,8 +35,9 @@ class ShareChatLiveFetcher:
         self.results_file = os.path.join(self.data_dir, "results.json")
         self.log_file = os.path.join(self.data_dir, "sharechat.log")
         
-        # Server settings
-        self.server_port = 8080
+        # Server settings - Render के लिए port environment variable से लें
+        self.server_port = int(os.environ.get("PORT", 8080))
+        self.server_host = "0.0.0.0"  # Render के लिए यह ज़रूरी है
         self.server = None
         self.server_thread = None
         self.is_running = False
@@ -631,6 +632,9 @@ class ShareChatLiveFetcher:
                         self.send_response(200)
                         self.send_header('Content-type', content_type)
                         self.send_header('Access-Control-Allow-Origin', '*')
+                        self.send_header('Cache-Control', 'no-cache, no-store, must-revalidate')
+                        self.send_header('Pragma', 'no-cache')
+                        self.send_header('Expires', '0')
                         self.end_headers()
                         self.wfile.write(content)
                         
@@ -678,6 +682,9 @@ class ShareChatLiveFetcher:
                         self.send_response(200)
                         self.send_header('Content-type', 'application/json')
                         self.send_header('Access-Control-Allow-Origin', '*')
+                        self.send_header('Cache-Control', 'no-cache, no-store, must-revalidate')
+                        self.send_header('Pragma', 'no-cache')
+                        self.send_header('Expires', '0')
                         self.end_headers()
                         
                         self.wfile.write(json.dumps(response).encode('utf-8'))
@@ -715,18 +722,21 @@ class ShareChatLiveFetcher:
                 pass
         
         try:
-            # Create server
-            self.server = HTTPServer(('localhost', self.server_port), RequestHandler)
+            # Create server - Render के लिए 0.0.0.0 use करें
+            self.server = HTTPServer((self.server_host, self.server_port), RequestHandler)
             self.is_running = True
             
             # Store parent reference in handler class
             RequestHandler.parent = self
             
             def run_server():
-                self.logger.info(f"🚀 Server started on http://localhost:{self.server_port}")
-                print(f"\n🌐 Server running at: http://localhost:{self.server_port}")
-                print("📱 Open this URL in your browser")
-                print("🔄 Press Ctrl+C to stop the server\n")
+                # Get actual URL for Render
+                actual_url = os.environ.get("RENDER_EXTERNAL_URL", f"http://localhost:{self.server_port}")
+                
+                self.logger.info(f"🚀 Server started on {self.server_host}:{self.server_port}")
+                print(f"\n🌐 Server running at: {actual_url}")
+                print(f"📱 Open this URL in your browser")
+                print(f"🔄 Press Ctrl+C to stop the server\n")
                 
                 # Server loop
                 try:
@@ -743,12 +753,16 @@ class ShareChatLiveFetcher:
             # Give server time to start
             time.sleep(1)
             
-            # Try to open browser
-            try:
-                webbrowser.open(f'http://localhost:{self.server_port}')
-            except:
-                print(f"⚠️ Could not open browser automatically")
-                print(f"Please open manually: http://localhost:{self.server_port}")
+            # Only open browser if running locally
+            if not os.environ.get("RENDER"):
+                try:
+                    webbrowser.open(f'http://localhost:{self.server_port}')
+                except:
+                    print(f"⚠️ Could not open browser automatically")
+                    print(f"Please open manually: http://localhost:{self.server_port}")
+            else:
+                print("🚀 Running on Render Cloud Platform")
+                print(f"✅ Your app will be available at: {os.environ.get('RENDER_EXTERNAL_URL', 'Your Render URL')}")
             
             return True
             
@@ -769,7 +783,7 @@ class ShareChatLiveFetcher:
                 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 sock.settimeout(1)
                 try:
-                    sock.connect(('localhost', self.server_port))
+                    sock.connect((self.server_host, self.server_port))
                     sock.send(b'GET / HTTP/1.0\r\n\r\n')
                 except:
                     pass
@@ -1003,11 +1017,15 @@ class ShareChatLiveFetcher:
         """
         Dashboard show करें
         """
+        actual_url = os.environ.get("RENDER_EXTERNAL_URL", f"http://localhost:{self.server_port}")
+        
         print("\n" + "=" * 70)
         print("📱 SHARECHAT LIVE PROFILE FETCHER")
         print("=" * 70)
         print("Status: Server running")
-        print(f"URL: http://localhost:{self.server_port}")
+        print(f"URL: {actual_url}")
+        print(f"Host: {self.server_host}")
+        print(f"Port: {self.server_port}")
         print(f"Data directory: {self.data_dir}")
         print(f"Exports directory: {self.exports_dir}")
         print("=" * 70)
@@ -1115,10 +1133,16 @@ def main():
     print("=" * 70)
     print("This tool will:")
     print("1. Start a local web server")
-    print("2. Open browser with YOUR original index.html")
-    print("3. Fetch profiles in real-time")
-    print("4. Display results in console")
+    print("2. Fetch profiles in real-time")
+    print("3. Display results in console")
     print("=" * 70)
+    
+    # Check if running on Render
+    if os.environ.get("RENDER"):
+        print("✅ Running on Render Cloud Platform")
+        print("🌐 Your app will be available at your Render URL")
+    else:
+        print("✅ Running locally")
     
     # Check requirements
     try:
@@ -1130,7 +1154,24 @@ def main():
     
     # Create and run fetcher
     fetcher = ShareChatLiveFetcher()
-    fetcher.run_interactive()
+    
+    # On Render, run server directly without interactive mode
+    if os.environ.get("RENDER"):
+        print("\n🚀 Starting server for Render deployment...")
+        print("📱 Open your browser to your Render URL")
+        
+        # Start server and keep it running
+        if fetcher.start_server():
+            try:
+                # Keep the main thread alive
+                while True:
+                    time.sleep(1)
+            except KeyboardInterrupt:
+                fetcher.stop_server()
+                print("\n✅ Server stopped")
+    else:
+        # Run in interactive mode locally
+        fetcher.run_interactive()
 
 # Alternative: Manual file placement
 def setup_files_manually():
@@ -1157,10 +1198,9 @@ def setup_files_manually():
     print("   - Use the JavaScript code from this tool")
     
     print(f"\n4. Run the tool:")
-    print("   python sharechat_live.py")
+    print("   python app.py")
     
-    print("\n5. Open browser to:")
-    print("   http://localhost:8080")
+    print("\n5. Open browser to your Render URL")
 
 if __name__ == "__main__":
     # Check if web directory exists and has index.html
