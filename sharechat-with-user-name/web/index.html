@@ -427,7 +427,7 @@
         // Send data to our Python backend
         console.log("📱 Sending data to backend...");
         
-        const response = await fetch('http://localhost:8080/fetch-profile', {
+        const response = await fetch('/fetch-profile', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
@@ -521,8 +521,8 @@
     // Function to check backend connection
     async function checkBackendConnection() {
       try {
-        const response = await fetch('http://localhost:8080/', { 
-          method: 'HEAD',
+        const response = await fetch('/', { 
+          method: 'GET',
           mode: 'no-cors' // Use no-cors to avoid CORS issues for simple check
         });
         console.log("✅ Backend server is reachable");
