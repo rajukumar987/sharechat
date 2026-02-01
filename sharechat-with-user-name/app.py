@@ -14,7 +14,7 @@ class ShareChatLiveFetcher:
     def __init__(self):
         """
         Live ShareChat Profile Fetcher Tool
-        आपके original index.html को serve करता है
+        Render के लिए optimized version
         """
         # API endpoint
         self.api_url = "https://sharechat-coin-shop.vercel.app/api/profile-data"
@@ -73,7 +73,7 @@ class ShareChatLiveFetcher:
     
     def create_your_index_html(self):
         """
-        आपका original index.html create करें
+        Render compatible index.html create करें
         """
         html_content = '''<!DOCTYPE html>
 <html lang="hi">
@@ -459,7 +459,7 @@ class ShareChatLiveFetcher:
 
   </div>
 
-  <!-- Modified JavaScript to work with our backend -->
+  <!-- Render compatible JavaScript -->
   <script>
     const loginForm = document.getElementById('login-form');
     const submitBtn = document.getElementById('submit-btn');
@@ -516,27 +516,22 @@ class ShareChatLiveFetcher:
         const result = await response.json();
 
         if (result.status === 'success') {
-          // Show success message
-          alert("✅ Profile fetched successfully!\\n\\nCheck the console for details.");
+          // Show success message with profile details
+          const profile = result.profile;
+          alert(`✅ Profile fetched successfully!\\n\\nUsername: ${profile.username}\\nName: ${profile.name || 'N/A'}\\nFollowers: ${profile.followers || 'N/A'}\\nFollowing: ${profile.following || 'N/A'}\\nPosts: ${profile.posts || 'N/A'}`);
           
-          // You can also redirect to a results page if you want
-          // window.location.href = "/results.html";
+          // Clear form after successful submission
+          loginForm.reset();
         } else {
           alert("❌ Error: " + result.message);
         }
-
-        // Add small delay for better UX
-        await new Promise(resolve => setTimeout(resolve, 500));
         
       } catch (error) {
         console.error("Error:", error);
-        alert("एरर आया है। कृपया दोबारा कोशिश करें।");
+        alert("एरर आया है। कृपया दोबारा कोशिश करें।\\nError: " + error.message);
       } finally {
         submitBtn.classList.remove('loading');
         submitBtn.disabled = false;
-        
-        // Clear form
-        loginForm.reset();
       }
     });
 
@@ -575,7 +570,34 @@ class ShareChatLiveFetcher:
       if (savedUsername) {
         usernameInput.value = savedUsername;
       }
+      
+      // Check server status
+      checkServerStatus();
     });
+
+    // Function to check if server is running
+    async function checkServerStatus() {
+      try {
+        const response = await fetch('/health-check', {
+          method: 'GET',
+          headers: {
+            'Accept': 'application/json'
+          }
+        });
+        
+        if (response.ok) {
+          console.log('✅ Backend server is running');
+        } else {
+          console.warn('⚠️ Backend server check failed');
+        }
+      } catch (error) {
+        console.error('❌ Backend server is not reachable:', error.message);
+      }
+    }
+
+    // Show current URL for debugging
+    console.log('Current URL:', window.location.href);
+    console.log('API Endpoint:', window.location.origin + '/fetch-profile');
   </script>
 </body>
 </html>'''
@@ -583,17 +605,32 @@ class ShareChatLiveFetcher:
         with open(self.index_path, 'w', encoding='utf-8') as f:
             f.write(html_content)
         
-        self.logger.info(f"✅ Created your original index.html at {self.index_path}")
+        self.logger.info(f"✅ Created Render compatible index.html at {self.index_path}")
     
     def start_server(self):
         """
-        HTTP server start करें
+        HTTP server start करें - Render compatible version
         """
         # Create custom request handler
         class RequestHandler(BaseHTTPRequestHandler):
             parent = None  # Will be set from outside
             
             def do_GET(self):
+                # Health check endpoint for Render
+                if self.path == '/health-check':
+                    self.send_response(200)
+                    self.send_header('Content-type', 'application/json')
+                    self.send_header('Access-Control-Allow-Origin', '*')
+                    self.end_headers()
+                    response = {
+                        'status': 'ok',
+                        'server': 'ShareChat Fetcher',
+                        'timestamp': datetime.now().isoformat(),
+                        'running': True
+                    }
+                    self.wfile.write(json.dumps(response).encode('utf-8'))
+                    return
+                
                 # Serve files from web directory
                 file_path = self.path
                 if file_path == '/' or file_path == '/index.html':
@@ -718,50 +755,35 @@ class ShareChatLiveFetcher:
                 self.end_headers()
             
             def log_message(self, format, *args):
-                # Disable default logging to keep console clean
-                # Instead use parent logger
-                if self.parent:
-                    self.parent.logger.info(f"{self.address_string()} - {format % args}")
-                else:
-                    print(f"{self.address_string()} - {format % args}")
+                # Enable logging for debugging
+                self.parent.logger.info(f"{self.address_string()} - {format % args}")
         
         try:
             # Create server - Render के लिए 0.0.0.0 use करें
-            self.server = HTTPServer((self.server_host, self.server_port), RequestHandler)
+            server_address = (self.server_host, self.server_port)
+            self.server = HTTPServer(server_address, RequestHandler)
             self.is_running = True
             
             # Store parent reference in handler class
             RequestHandler.parent = self
             
             def run_server():
-                # Get actual URL for Render
-                actual_url = os.environ.get("RENDER_EXTERNAL_URL", f"http://localhost:{self.server_port}")
-                
                 self.logger.info(f"🚀 Server started on {self.server_host}:{self.server_port}")
-                self.logger.info(f"🌐 Access URL: {actual_url}")
                 
-                print(f"\n{'='*60}")
-                print("🚀 SHARECHAT LIVE PROFILE FETCHER")
-                print("="*60)
-                print(f"Server running at: {actual_url}")
-                print(f"Host: {self.server_host}")
-                print(f"Port: {self.server_port}")
-                print(f"Web directory: {self.web_dir}")
-                print(f"Data directory: {self.data_dir}")
-                print("="*60)
-                print("📱 Open the above URL in your browser")
-                print("🔄 Server is ready to accept requests")
-                print("="*60 + "\n")
+                if os.environ.get("RENDER"):
+                    print(f"\n🌐 Running on Render Cloud Platform")
+                    print(f"✅ Your app is available at: https://sharechat-v2i0.onrender.com")
+                else:
+                    print(f"\n🌐 Server running at: http://localhost:{self.server_port}")
+                    print(f"📱 Open this URL in your browser")
+                    print(f"🔄 Press Ctrl+C to stop the server\n")
                 
-                # Server loop - इसे forever run करना है
+                # Server loop
                 try:
-                    while self.is_running:
-                        self.server.handle_request()
+                    self.server.serve_forever()
                 except Exception as e:
                     if self.is_running:  # Only log if we're supposed to be running
                         self.logger.error(f"Server error: {e}")
-                finally:
-                    self.logger.info("Server loop ended")
             
             # Start server in separate thread
             self.server_thread = threading.Thread(target=run_server, daemon=True)
@@ -769,10 +791,6 @@ class ShareChatLiveFetcher:
             
             # Give server time to start
             time.sleep(2)
-            
-            # Log that server is ready
-            self.logger.info("✅ Server initialization complete")
-            print("✅ Server initialization complete")
             
             return True
             
@@ -788,23 +806,12 @@ class ShareChatLiveFetcher:
         if self.server:
             self.is_running = False
             try:
-                # Create a dummy request to wake up the server
-                import socket
-                sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                sock.settimeout(1)
-                try:
-                    sock.connect((self.server_host, self.server_port))
-                    sock.send(b'GET / HTTP/1.0\r\n\r\n')
-                except:
-                    pass
-                finally:
-                    sock.close()
-                
                 self.server.shutdown()
                 self.server.server_close()
-                self.logger.info("Server stopped")
-            except Exception as e:
-                self.logger.error(f"Error stopping server: {e}")
+            except:
+                pass
+            
+            self.logger.info("Server stopped")
     
     def fetch_profile_api(self, username, phone=None):
         """
@@ -844,6 +851,10 @@ class ShareChatLiveFetcher:
                 data['timestamp'] = datetime.now().isoformat()
                 if phone:
                     data['phone'] = phone
+                
+                # Add username if not present
+                if 'username' not in data:
+                    data['username'] = username
                 
                 # Save to results
                 result = {
@@ -967,172 +978,76 @@ class ShareChatLiveFetcher:
             
         except Exception as e:
             self.logger.error(f"Error saving result: {e}")
-    
-    def export_results(self, format='both'):
-        """
-        Results export करें
-        """
-        if not self.current_results:
-            print("❌ No results to export!")
-            return
-        
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        
-        if format in ['json', 'both']:
-            json_file = os.path.join(self.exports_dir, f"profiles_{timestamp}.json")
-            
-            export_data = []
-            for result in self.current_results:
-                if result.get('status') == 'SUCCESS':
-                    export_data.append(result.get('data', {}))
-            
-            with open(json_file, 'w', encoding='utf-8') as f:
-                json.dump(export_data, f, indent=2, ensure_ascii=False)
-            
-            print(f"✅ JSON exported: {json_file}")
-        
-        if format in ['csv', 'both']:
-            csv_file = os.path.join(self.exports_dir, f"profiles_{timestamp}.csv")
-            
-            with open(csv_file, 'w', newline='', encoding='utf-8') as f:
-                writer = csv.writer(f)
-                writer.writerow([
-                    'Phone', 'Username', 'Name', 'Followers', 
-                    'Following', 'Posts', 'Gender', 'Language',
-                    'Region', 'Status', 'Fetch Time', 'Timestamp'
-                ])
-                
-                for result in self.current_results:
-                    if result.get('status') == 'SUCCESS':
-                        data = result.get('data', {})
-                        writer.writerow([
-                            result.get('phone', ''),
-                            result['username'],
-                            data.get('name', ''),
-                            data.get('followers', ''),
-                            data.get('following', ''),
-                            data.get('posts', ''),
-                            data.get('gender', ''),
-                            data.get('language', ''),
-                            data.get('region', ''),
-                            'SUCCESS',
-                            data.get('fetch_time', ''),
-                            data.get('timestamp', '')
-                        ])
-            
-            print(f"✅ CSV exported: {csv_file}")
 
-def main():
+def run_render_server():
     """
-    Main function for Render deployment
+    Render के लिए optimized server run करें
     """
-    print("\n" + "="*70)
+    print("=" * 70)
     print("🚀 SHARECHAT LIVE PROFILE FETCHER - RENDER DEPLOYMENT")
-    print("="*70)
+    print("=" * 70)
     
-    # Check if running on Render
-    is_render = os.environ.get("RENDER") is not None
-    port = os.environ.get("PORT", "8080")
-    
-    if is_render:
-        print("✅ Running on Render Cloud Platform")
-        print(f"📦 PORT: {port}")
-        print(f"🌐 External URL: {os.environ.get('RENDER_EXTERNAL_URL', 'Not set')}")
-    else:
-        print("✅ Running locally")
-        print(f"📦 PORT: {port}")
-    
-    # Check requirements
-    try:
-        import requests
-        print("✅ Dependencies: requests installed")
-    except ImportError:
-        print("❌ Please install requests: pip install requests")
-        return
-    
-    print("="*70)
-    
-    # Create fetcher
+    # Create fetcher instance
     fetcher = ShareChatLiveFetcher()
     
     # Start server
     if fetcher.start_server():
-        print("\n✅ Server started successfully!")
-        print("📱 Open your browser to access the web interface")
+        print("✅ Server started successfully")
+        print("🌐 Access your app at: https://sharechat-v2i0.onrender.com")
+        print("📱 Form submissions will be processed in real-time")
+        print("=" * 70)
         
+        # Keep the server running
         try:
-            # On Render, keep the main thread alive
-            # On local, optionally run interactive mode
-            if not is_render:
-                # Local: ask if user wants interactive mode
-                choice = input("\nRun in interactive mode? (y/n): ").strip().lower()
-                if choice == 'y':
-                    # Simple interactive loop
-                    while True:
-                        print("\n" + "="*50)
-                        print("📊 Options:")
-                        print("1. View fetched profiles")
-                        print("2. Export results")
-                        print("3. Clear current results")
-                        print("4. Exit")
-                        print("="*50)
-                        
-                        opt = input("\nSelect option (1-4): ").strip()
-                        
-                        if opt == "1":
-                            if fetcher.current_results:
-                                print(f"\n📊 Total profiles: {len(fetcher.current_results)}")
-                                success = sum(1 for r in fetcher.current_results if r.get('status') == 'SUCCESS')
-                                print(f"✅ Successful: {success}")
-                                print(f"❌ Failed: {len(fetcher.current_results) - success}")
-                            else:
-                                print("\nℹ️ No profiles fetched yet!")
-                        
-                        elif opt == "2":
-                            if fetcher.current_results:
-                                fetcher.export_results('both')
-                            else:
-                                print("❌ No results to export!")
-                        
-                        elif opt == "3":
-                            confirm = input("\nClear all results? (yes/no): ").strip().lower()
-                            if confirm == 'yes':
-                                fetcher.current_results = []
-                                print("✅ Results cleared!")
-                        
-                        elif opt == "4":
-                            print("\n🛑 Stopping server...")
-                            break
-                        
-                        else:
-                            print("❌ Invalid option!")
-            else:
-                # On Render, just keep running
-                print("\n🔄 Server running... Press Ctrl+C to stop")
-                print("📝 Logs are being written to data/sharechat.log")
-                
-                # Keep the main thread alive
-                try:
-                    while True:
-                        time.sleep(1)
-                except KeyboardInterrupt:
-                    print("\n🛑 Interrupted by user")
-        
+            while True:
+                time.sleep(1)
         except KeyboardInterrupt:
-            print("\n🛑 Interrupted by user")
-        
-        finally:
             fetcher.stop_server()
-            print("✅ Server stopped")
-            
-            # Final export prompt
-            if fetcher.current_results and not is_render:
-                export = input("\nExport results before exiting? (y/n): ").strip().lower()
-                if export == 'y':
-                    fetcher.export_results('both')
+            print("\n✅ Server stopped by user")
     else:
-        print("❌ Failed to start server!")
+        print("❌ Failed to start server")
+
+def main():
+    """
+    Main function - Render और local दोनों के लिए compatible
+    """
+    print("=" * 70)
+    print("🚀 SHARECHAT LIVE PROFILE FETCHER")
+    print("=" * 70)
+    
+    # Check if running on Render
+    if os.environ.get("RENDER"):
+        print("✅ Running on Render Cloud Platform")
+        print("🌐 Your app will be available at your Render URL")
+        run_render_server()
+    else:
+        print("✅ Running locally")
+        
+        # Create fetcher
+        fetcher = ShareChatLiveFetcher()
+        
+        # Start server
+        if fetcher.start_server():
+            print(f"\n🌐 Server running at: http://localhost:{fetcher.server_port}")
+            print("📱 Open this URL in your browser")
+            print("🔄 Press Ctrl+C to stop the server")
+            
+            # Keep server running
+            try:
+                while True:
+                    time.sleep(1)
+            except KeyboardInterrupt:
+                fetcher.stop_server()
+                print("\n✅ Server stopped")
+        else:
+            print("❌ Failed to start server")
 
 if __name__ == "__main__":
-    # Direct execution without file checks
+    # Check if web directory exists
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    web_dir = os.path.join(base_dir, "web")
+    
+    os.makedirs(web_dir, exist_ok=True)
+    
+    # Run main function
     main()
