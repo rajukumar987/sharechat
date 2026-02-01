@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign in</title>
+
+  <link href="https://fonts.googleapis.com/css?family=Inter:400,600,700&display=swap" rel="stylesheet">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📱</text></svg>">
+
+  <style>
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background: #fff;
+      font-family: 'Inter', Arial, sans-serif;
+      color: #212936;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      overflow-x: hidden;
+    }
+
+    .container {
+      max-width: 100%;
+      width: 100%;
+      margin: 0 auto;
+      padding: 20px 24px 40px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      min-height: -webkit-fill-available;
+    }
+
+    .logo {
+      margin: 40px auto 28px;
+      width: 80px;
+      height: 80px;
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.07);
+      background: white;
+    }
+
+    .logo-img {
+      width: 74px;
+      height: 74px;
+      object-fit: contain;
+      border-radius: 16px;
+    }
+
+    h1 {
+      font-size: 1.75rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+      text-align: center;
+      line-height: 1.3;
+    }
+
+    .subtitle {
+      font-size: 0.95rem;
+      margin-bottom: 28px;
+      color: #6c757d;
+      text-align: center;
+      line-height: 1.4;
+      padding: 0 10px;
+    }
+
+    .input-group {
+      display: flex;
+      width: 100%;
+      margin-bottom: 18px;
+      border: 1.5px solid #e0e2e6;
+      border-radius: 10px;
+      background: #fff;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+      align-items: center;
+      transition: all 0.2s ease;
+    }
+
+    .input-group:focus-within {
+      border-color: #212936;
+      box-shadow: 0 0 0 3px rgba(33, 41, 54, 0.1);
+    }
+
+    .input-group select,
+    .input-group input {
+      border: none;
+      font-size: 1rem;
+      padding: 14px 12px;
+      outline: none;
+      background: transparent;
+      height: 52px;
+      font-family: 'Inter', Arial, sans-serif;
+      width: 100%;
+      -webkit-appearance: none;
+      appearance: none;
+      color: #212936;
+    }
+
+    .input-group select {
+      width: 85px;
+      min-width: 85px;
+      border-right: 1px solid #e0e2e6;
+      font-weight: 600;
+      text-align-last: center;
+      padding-right: 8px;
+      background: transparent;
+      cursor: pointer;
+    }
+
+    .input-group input {
+      flex: 1;
+      min-width: 0;
+    }
+
+    input::placeholder {
+      color: #9ca3af;
+      opacity: 1;
+    }
+
+    .btn {
+      width: 100%;
+      font-size: 1.05rem;
+      font-weight: 700;
+      border-radius: 10px;
+      padding: 16px 0;
+      margin: 20px 0 10px;
+      cursor: pointer;
+      background: #212936;
+      color: #fff;
+      border: none;
+      transition: all 0.2s ease;
+      touch-action: manipulation;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn:active,
+    .btn:focus-visible {
+      background: #3a4558;
+      transform: translateY(1px);
+      outline: none;
+    }
+
+    .btn:focus-visible {
+      box-shadow: 0 0 0 3px rgba(33, 41, 54, 0.3);
+    }
+
+    .terms {
+      font-size: 0.85rem;
+      text-align: center;
+      margin-bottom: 20px;
+      line-height: 1.5;
+      padding: 0 5px;
+      color: #6b7280;
+    }
+
+    .terms a {
+      color: #212936;
+      font-weight: 700;
+      text-decoration: underline;
+      transition: color 0.2s ease;
+    }
+
+    .terms a:active {
+      color: #3a4558;
+    }
+
+    .download-text {
+      margin-top: 36px;
+      font-size: 1rem;
+      text-align: center;
+      margin-bottom: 18px;
+      font-weight: 600;
+      color: #212936;
+    }
+
+    .app-badges {
+      display: flex;
+      justify-content: center;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    .app-badges img {
+      height: 42px;
+      cursor: pointer;
+      max-width: 100%;
+      transition: transform 0.2s ease;
+    }
+
+    .app-badges img:active {
+      transform: scale(0.98);
+    }
+
+    /* Loading state */
+    .btn.loading {
+      opacity: 0.8;
+      pointer-events: none;
+    }
+
+    .btn.loading::after {
+      content: '';
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      top: 50%;
+      left: 50%;
+      margin: -10px 0 0 -10px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    /* Mobile optimizations */
+    @media (max-width: 360px) {
+      .container {
+        padding: max(16px, env(safe-area-inset-top)) max(20px, env(safe-area-inset-right)) max(36px, env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left));
+      }
+      
+      .logo {
+        width: 72px;
+        height: 72px;
+        margin: 30px auto 24px;
+      }
+      
+      .logo-img {
+        width: 66px;
+        height: 66px;
+      }
+      
+      h1 {
+        font-size: 1.6rem;
+      }
+      
+      .subtitle {
+        font-size: 0.9rem;
+        margin-bottom: 24px;
+      }
+      
+      .input-group select,
+      .input-group input {
+        height: 48px;
+        padding: 12px 10px;
+        font-size: 0.95rem;
+      }
+      
+      .input-group select {
+        width: 80px;
+        min-width: 80px;
+      }
+      
+      .btn {
+        padding: 15px 0;
+        font-size: 1rem;
+      }
+      
+      .app-badges img {
+        height: 38px;
+      }
+    }
+
+    @media (min-width: 768px) {
+      .container {
+        max-width: 400px;
+        padding: 32px 24px 48px;
+        margin: 0 auto;
+        justify-content: center;
+      }
+    }
+
+    /* Safe area support for notch phones */
+    @supports (padding: max(0px)) {
+      .container {
+        padding-left: max(24px, env(safe-area-inset-left));
+        padding-right: max(24px, env(safe-area-inset-right));
+        padding-bottom: max(40px, env(safe-area-inset-bottom));
+      }
+    }
+
+    /* High contrast mode support */
+    @media (prefers-contrast: high) {
+      .input-group {
+        border-width: 2px;
+      }
+      
+      .btn {
+        border: 2px solid #212936;
+      }
+    }
+
+    /* Reduce motion */
+    @media (prefers-reduced-motion: reduce) {
+      * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+
+    <span class="logo">
+      <img class="logo-img" src="https://cdn.iconscout.com/icon/free/png-256/free-sharechat-1136710.png" alt="ShareChat Logo" loading="lazy">
+    </span>
+
+    <h1>Sign in</h1>
+    <div class="subtitle">मोबाइल नंबर और यूज़रनेम डालें</div>
+
+    <form id="login-form" novalidate>
+
+      <!-- Phone number -->
+      <div class="input-group">
+        <select aria-label="Country code">
+          <option value="+91">+91</option>
+        </select>
+        <input 
+          type="tel" 
+          id="mobile" 
+          placeholder="मोबाइल नंबर" 
+          maxlength="10" 
+          required 
+          inputmode="numeric"
+          pattern="[0-9]{10}"
+          aria-label="मोबाइल नंबर"
+          autocomplete="tel"
+        >
+      </div>
+
+      <!-- Username -->
+      <div class="input-group">
+        <input 
+          type="text" 
+          id="username" 
+          placeholder="यूज़रनेम" 
+          required
+          aria-label="यूज़रनेम"
+          autocomplete="username"
+        >
+      </div>
+
+      <div class="terms">
+        By accepting this you agree to our
+        <a href="#" aria-label="Terms and Conditions">Terms</a>,
+        <a href="#" aria-label="Privacy Policy">Privacy</a>,
+        <a href="#" aria-label="Content Policy">Content Policy</a>
+      </div>
+
+      <button type="submit" class="btn" id="submit-btn" aria-label="Submit form">
+        Submit
+      </button>
+    </form>
+
+    <!-- App Download Section -->
+    <div class="download-text">शेयरचेट ऐप डाउनलोड करें</div>
+    <div class="app-badges">
+      <a href="https://play.google.com/store" aria-label="Download from Google Play Store">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg" alt="Google Play Store" loading="lazy">
+      </a>
+      <a href="https://apps.apple.com" aria-label="Download from App Store">
+        <img src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg" alt="App Store" loading="lazy">
+      </a>
+    </div>
+
+  </div>
+
+  <!-- Modified JavaScript to work with our Python backend -->
+  <script>
+    const loginForm = document.getElementById('login-form');
+    const submitBtn = document.getElementById('submit-btn');
+    const mobileInput = document.getElementById('mobile');
+    const usernameInput = document.getElementById('username');
+
+    // Mobile number validation
+    mobileInput.addEventListener('input', function(e) {
+      this.value = this.value.replace(/\D/g, '').slice(0, 10);
+    });
+
+    // Form submission
+    loginForm.addEventListener('submit', async function(e) {
+      e.preventDefault();
+      
+      const mobile = mobileInput.value.trim();
+      const username = usernameInput.value.trim();
+
+      // Validation
+      if (!/^\d{10}$/.test(mobile)) {
+        alert("कृपया सही मोबाइल नंबर डालें (10 digits)");
+        mobileInput.focus();
+        return;
+      }
+
+      if (!username) {
+        alert("कृपया यूज़रनेम डालें");
+        usernameInput.focus();
+        return;
+      }
+
+      // Show loading state
+      submitBtn.classList.add('loading');
+      submitBtn.disabled = true;
+
+      try {
+        // Store in localStorage
+        localStorage.setItem("userMobile", mobile);
+        localStorage.setItem("userUsername", username);
+        localStorage.setItem("loginTime", new Date().toISOString());
+
+        // Send data to our Python backend
+        console.log("📱 Sending data to backend...");
+        
+        const response = await fetch('http://localhost:8080/fetch-profile', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            phone: mobile,
+            username: username
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const result = await response.json();
+        
+        console.log("Backend response:", result);
+
+        if (result.status === 'success') {
+          // Show success message with profile details
+          const profile = result.profile;
+          let message = `✅ Profile fetched successfully!\n\n`;
+          message += `Name: ${profile.name || 'N/A'}\n`;
+          message += `Username: ${username}\n`;
+          message += `Followers: ${profile.followers || '0'}\n`;
+          message += `Following: ${profile.following || '0'}\n`;
+          message += `Posts: ${profile.posts || '0'}`;
+          
+          alert(message);
+          
+          // Clear form
+          loginForm.reset();
+        } else {
+          alert(`❌ Error: ${result.message}`);
+        }
+
+      } catch (error) {
+        console.error("Error:", error);
+        
+        if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+          alert("⚠️ Backend server is not running.\n\nPlease make sure the Python tool is running and then try again.");
+        } else {
+          alert(`एरर आया है: ${error.message}\n\nकृपया दोबारा कोशिश करें।`);
+        }
+      } finally {
+        submitBtn.classList.remove('loading');
+        submitBtn.disabled = false;
+      }
+    });
+
+    // Handle Enter key navigation
+    mobileInput.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        usernameInput.focus();
+      }
+    });
+
+    usernameInput.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        submitBtn.click();
+      }
+    });
+
+    // Check if we have saved data
+    window.addEventListener('load', function() {
+      // Test localStorage availability
+      try {
+        localStorage.setItem('test', 'test');
+        localStorage.removeItem('test');
+      } catch (e) {
+        console.warn("LocalStorage not available:", e);
+      }
+
+      // Load saved data if exists
+      const savedMobile = localStorage.getItem("userMobile");
+      const savedUsername = localStorage.getItem("userUsername");
+      
+      if (savedMobile) {
+        mobileInput.value = savedMobile;
+      }
+      if (savedUsername) {
+        usernameInput.value = savedUsername;
+      }
+      
+      // Check backend connection
+      checkBackendConnection();
+    });
+
+    // Function to check backend connection
+    async function checkBackendConnection() {
+      try {
+        const response = await fetch('http://localhost:8080/', { 
+          method: 'HEAD',
+          mode: 'no-cors' // Use no-cors to avoid CORS issues for simple check
+        });
+        console.log("✅ Backend server is reachable");
+      } catch (error) {
+        console.warn("⚠️ Backend server not reachable. Make sure Python tool is running.");
+      }
+    }
+  </script>
+</body>
+</html>

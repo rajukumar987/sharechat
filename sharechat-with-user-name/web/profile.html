@@ -1,0 +1,1068 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Profile Coins UI</title>
+  
+  <!-- Improved CSS with compatibility -->
+  <style>
+    * {
+      box-sizing: border-box;
+      -webkit-box-sizing: border-box;
+      -moz-box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background: #ffffff;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      display: -webkit-box;
+      display: -webkit-flex;
+      display: -ms-flexbox;
+      display: flex;
+      -webkit-box-pack: center;
+      -webkit-justify-content: center;
+      -ms-flex-pack: center;
+      justify-content: center;
+      min-height: 100vh;
+      min-height: -webkit-fill-available;
+      overflow-x: hidden;
+    }
+
+    .app {
+      width: 100%;
+      max-width: 360px;
+      background: #fff;
+    }
+
+    /* TOP CARD */
+    .profile-card {
+      background: #f8d257;
+      margin: 16px;
+      border-radius: 22px;
+      padding: 20px 16px 24px;
+      color: #fff;
+      position: relative;
+      -webkit-box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .share {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      font-size: 14px;
+      background: rgba(255,255,255,0.2);
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-weight: 600;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      border: none;
+      color: #fff;
+    }
+
+    .level {
+      width: 72px;
+      height: 72px;
+      background: #fff;
+      border-radius: 50%;
+      display: -webkit-box;
+      display: -webkit-flex;
+      display: -ms-flexbox;
+      display: flex;
+      -webkit-box-align: center;
+      -webkit-align-items: center;
+      -ms-flex-align: center;
+      align-items: center;
+      -webkit-box-pack: center;
+      -webkit-justify-content: center;
+      -ms-flex-pack: center;
+      justify-content: center;
+      font-size: 28px;
+      font-weight: 700;
+      margin: 0 auto 10px;
+      color: #e9c41fc2;
+      border: 4px solid rgba(255,255,255,0.6);
+    }
+
+    .level img {
+      width: 60%;
+      height: 60%;
+      border-radius: 50%;
+      -o-object-fit: cover;
+      object-fit: cover;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+    }
+
+    .user-id {
+      text-align: center;
+      font-size: 18px;
+      font-weight: 700;
+      word-break: break-word;
+      padding: 0 10px;
+    }
+
+    .sub-id {
+      text-align: center;
+      font-size: 13px;
+      opacity: 0.9;
+      margin-top: 4px;
+      word-break: break-all;
+      padding: 0 10px;
+    }
+
+    .stats {
+      display: -webkit-box;
+      display: -webkit-flex;
+      display: -ms-flexbox;
+      display: flex;
+      -webkit-box-pack: justify;
+      -webkit-justify-content: space-between;
+      -ms-flex-pack: justify;
+      justify-content: space-between;
+      margin-top: 18px;
+    }
+
+    .stat-box {
+      background: rgba(255,255,255,0.15);
+      -webkit-box-flex: 1;
+      -webkit-flex: 1;
+      -ms-flex: 1;
+      flex: 1;
+      margin: 0 4px;
+      border-radius: 12px;
+      padding: 12px 6px;
+      text-align: center;
+    }
+
+    .stat-box:first-child {
+      margin-left: 0;
+    }
+    
+    .stat-box:last-child {
+      margin-right: 0;
+    }
+
+    .stat-number {
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .stat-label {
+      font-size: 12px;
+      opacity: 0.9;
+    }
+
+    /* NEW OFFER CARD */
+    .offer-card {
+      margin: 0 16px 16px;
+      border-radius: 16px;
+      overflow: hidden;
+      -webkit-box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      background: #fff;
+    }
+
+    .offer-card img {
+      width: 100%;
+      display: block;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+    }
+
+    .buy-coins-bar {
+      display: -webkit-box;
+      display: -webkit-flex;
+      display: -ms-flexbox;
+      display: flex;
+      -webkit-box-align: center;
+      -webkit-align-items: center;
+      -ms-flex-align: center;
+      align-items: center;
+      -webkit-box-pack: justify;
+      -webkit-justify-content: space-between;
+      -ms-flex-pack: justify;
+      justify-content: space-between;
+      padding: 10px 12px;
+      border-top: 1px solid #eee;
+    }
+
+    .buy-left {
+      display: -webkit-box;
+      display: -webkit-flex;
+      display: -ms-flexbox;
+      display: flex;
+      -webkit-box-align: center;
+      -webkit-align-items: center;
+      -ms-flex-align: center;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .buy-left img {
+      width: 32px;
+      height: 32px;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+    }
+
+    .buy-text {
+      display: -webkit-box;
+      display: -webkit-flex;
+      display: -ms-flexbox;
+      display: flex;
+      -webkit-box-orient: vertical;
+      -webkit-box-direction: normal;
+      -webkit-flex-direction: column;
+      -ms-flex-direction: column;
+      flex-direction: column;
+    }
+
+    .buy-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: #000;
+    }
+
+    .buy-sub {
+      font-size: 12px;
+      color: #f59e0b;
+      font-weight: 600;
+    }
+
+    .buy-time {
+      font-size: 13px;
+      font-weight: 700;
+      color: #111;
+      white-space: nowrap;
+    }
+
+    /* PACK LIST */
+    .packs {
+      padding: 8px 16px 24px;
+    }
+
+    .pack {
+      display: -webkit-box;
+      display: -webkit-flex;
+      display: -ms-flexbox;
+      display: flex;
+      -webkit-box-align: center;
+      -webkit-align-items: center;
+      -ms-flex-align: center;
+      align-items: center;
+      -webkit-box-pack: justify;
+      -webkit-justify-content: space-between;
+      -ms-flex-pack: justify;
+      justify-content: space-between;
+      padding: 14px 0;
+      border-bottom: 1px solid #eee;
+    }
+
+    .pack:last-child {
+      border-bottom: none;
+    }
+
+    .pack-left {
+      display: -webkit-box;
+      display: -webkit-flex;
+      display: -ms-flexbox;
+      display: flex;
+      -webkit-box-align: center;
+      -webkit-align-items: center;
+      -ms-flex-align: center;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .coin {
+      width: 36px;
+      height: 36px;
+      display: -webkit-box;
+      display: -webkit-flex;
+      display: -ms-flexbox;
+      display: flex;
+      -webkit-box-align: center;
+      -webkit-align-items: center;
+      -ms-flex-align: center;
+      align-items: center;
+      -webkit-box-pack: center;
+      -webkit-justify-content: center;
+      -ms-flex-pack: center;
+      justify-content: center;
+    }
+
+    .coin img {
+      width: 32px;
+      height: 32px;
+      -o-object-fit: contain;
+      object-fit: contain;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+    }
+
+    .pack-title {
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    .bonus {
+      color: #16a34a;
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    .price {
+      font-size: 14px;
+      margin-top: 2px;
+    }
+
+    .old {
+      text-decoration: line-through;
+      color: #999;
+      margin-left: 6px;
+    }
+
+    .off {
+      color: #16a34a;
+      font-size: 13px;
+      margin-left: 6px;
+    }
+
+    .buy {
+      background: #22c55e;
+      color: #fff;
+      border: none;
+      padding: 8px 18px;
+      border-radius: 8px;
+      font-weight: 700;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      -webkit-transition: all 0.2s ease;
+      transition: all 0.2s ease;
+    }
+
+    .buy:active {
+      background: #1ea34a;
+      -webkit-transform: scale(0.98);
+      transform: scale(0.98);
+    }
+
+    .value-tag {
+      display: inline-block;
+      background: #ff6a00;
+      color: #fff;
+      font-size: 12px;
+      padding: 2px 8px;
+      border-radius: 12px;
+      margin-bottom: 6px;
+    }
+    
+    .super-tag {
+      display: inline-block;
+      background: #d946ef;
+      color: #fff;
+      font-size: 12px;
+      padding: 2px 8px;
+      border-radius: 12px;
+      margin-bottom: 6px;
+    }
+    
+    .mega-tag {
+      display: inline-block;
+      background: #f59e0b;
+      color: #fff;
+      font-size: 12px;
+      padding: 2px 8px;
+      border-radius: 12px;
+      margin-bottom: 6px;
+    }
+
+    /* Safe area support for newer Android */
+    @supports (padding: max(0px)) {
+      .packs {
+        padding-bottom: max(24px, env(safe-area-inset-bottom, 24px));
+      }
+    }
+
+    /* Dark mode support */
+    @media (prefers-color-scheme: dark) {
+      body {
+        background: #121212;
+      }
+      
+      .app {
+        background: #1e1e1e;
+      }
+      
+      .offer-card {
+        background: #2d2d2d;
+      }
+      
+      .buy-title {
+        color: #fff;
+      }
+      
+      .buy-time {
+        color: #ddd;
+      }
+      
+      .pack {
+        border-bottom-color: #333;
+      }
+      
+      .price {
+        color: #ddd;
+      }
+    }
+
+    /* Responsive for smaller screens */
+    @media (max-width: 360px) {
+      .app {
+        max-width: 100%;
+      }
+      
+      .profile-card {
+        margin: 12px;
+        padding: 16px 14px 20px;
+      }
+      
+      .packs {
+        padding-left: 12px;
+        padding-right: 12px;
+      }
+      
+      .pack-title {
+        font-size: 15px;
+      }
+      
+      .buy {
+        padding: 7px 14px;
+        font-size: 14px;
+      }
+    }
+
+    /* High contrast mode */
+    @media (prefers-contrast: high) {
+      .buy {
+        border: 2px solid #fff;
+      }
+      
+      .share {
+        border: 1px solid #fff;
+      }
+    }
+
+    /* Reduce motion */
+    @media (prefers-reduced-motion: reduce) {
+      .buy {
+        -webkit-transition: none;
+        transition: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+
+    <div class="profile-card">
+      <button class="share" onclick="logout()" aria-label="Logout">Logout</button>
+      <div class="level">
+        <img src="https://sharechat.com/assets/png/user.png" alt="User Profile" loading="lazy" id="userProfileImage">
+      </div>
+      <div class="user-id" id="userNameDisplay">ShareChatUser</div>
+      <div class="sub-id" id="userHandleDisplay">@4280056142</div>
+
+      <div class="stats">
+        <div class="stat-box">
+          <div class="stat-number" id="followersCount">6</div>
+          <div class="stat-label">Follower</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-number" id="followingCount">1</div>
+          <div class="stat-label">Following</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-number" id="postsCount">0</div>
+          <div class="stat-label">Posts</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- New Offer Card with Countdown -->
+    <div class="offer-card">
+      <img src="https://cdn4.sharechat.com/1dab1176_1697595288876_sc.jpeg" alt="Buy Coins Offer" loading="lazy">
+
+      <div class="buy-coins-bar">
+        <div class="buy-left">
+          <img src="https://cdn.sharechat.com/1158c4d7_1646376498635_sc.webp" alt="coin-icon" loading="lazy">
+          <div class="buy-text">
+            <div class="buy-title">Buy Coins</div>
+            <div class="buy-sub">Flash Sale is on</div>
+          </div>
+        </div>
+
+        <!-- Time -->
+        <div class="buy-time" id="countdown">12h : 36m</div>
+      </div>
+    </div>
+
+    <div class="packs">
+      <!-- Minimum Buy: ₹500 से शुरू -->
+      <div class="pack">
+        <div class="pack-left">
+          <div class="coin">
+            <img src="https://cdn4.sharechat.com/33d5318_1c8/tools/e7e57ba_1715942283598_sc.webp" alt="coin-icon" loading="lazy">
+          </div>
+          <div>
+            <div class="pack-title">3000 <span class="bonus">+600</span></div>
+            <div class="price">₹250 <span class="old">₹600</span> <span class="off">58% OFF</span></div>
+          </div>
+        </div>
+        <button class="buy" onclick="redirectToPayment(250, '3000 Coins + 600 Bonus')">Buy</button>
+      </div>
+
+      <div class="pack">
+        <div class="pack-left">
+          <div class="coin">
+            <img src="https://cdn4.sharechat.com/33d5318_1c8/tools/e7e57ba_1715942283598_sc.webp" alt="coin-icon" loading="lazy">
+          </div>
+          <div>
+            <div class="pack-title">7500 <span class="bonus">+750</span></div>
+            <div class="price">₹600 <span class="old">₹750</span> <span class="off">20% OFF</span></div>
+          </div>
+        </div>
+        <button class="buy" onclick="redirectToPayment(600, '7500 Coins + 750 Bonus')">Buy</button>
+      </div>
+
+      <div class="pack">
+        <div class="pack-left">
+          <div class="coin">
+            <img src="https://cdn4.sharechat.com/33d5318_1c8/tools/e7e57ba_1715942283598_sc.webp" alt="coin-icon" loading="lazy">
+          </div>
+          <div>
+            <div class="pack-title">10000 <span class="bonus">+1000</span></div>
+            <div class="price">₹800 <span class="old">₹1000</span> <span class="off">20% OFF</span></div>
+          </div>
+        </div>
+        <button class="buy" onclick="redirectToPayment(800, '10000 Coins + 1000 Bonus')">Buy</button>
+      </div>
+
+      <div class="pack">
+        <div class="pack-left">
+          <div class="coin">
+            <img src="https://cdn4.sharechat.com/33d5318_1c8/tools/e7e57ba_1715942283598_sc.webp" alt="coin-icon" loading="lazy">
+          </div>
+          <div>
+            <div class="pack-title">15000 <span class="bonus">+1500</span></div>
+            <div class="price">₹1200 <span class="old">₹1500</span> <span class="off">20% OFF</span></div>
+          </div>
+        </div>
+        <button class="buy" onclick="redirectToPayment(1200, '15000 Coins + 1500 Bonus')">Buy</button>
+      </div>
+
+      <!-- Value Pack -->
+      <div class="pack">
+        <div class="pack-left">
+          <div class="coin">
+            <img src="https://cdn4.sharechat.com/33d5318_1c8/tools/e7e57ba_1715942283598_sc.webp" alt="coin-icon" loading="lazy">
+          </div>
+          <div>
+            <span class="value-tag">Value Pack</span>
+            <div class="pack-title">20000 <span class="bonus">+4000</span></div>
+            <div class="price">₹1500 <span class="old">₹2000</span> <span class="off">25% OFF</span></div>
+          </div>
+        </div>
+        <button class="buy" onclick="redirectToPayment(1500, '20000 Coins + 4000 Bonus')">Buy</button>
+      </div>
+
+      <div class="pack">
+        <div class="pack-left">
+          <div class="coin">
+            <img src="https://cdn4.sharechat.com/33d5318_1c8/tools/e7e57ba_1715942283598_sc.webp" alt="coin-icon" loading="lazy">
+          </div>
+          <div>
+            <div class="pack-title">25000 <span class="bonus">+2500</span></div>
+            <div class="price">₹2000 <span class="old">₹2500</span> <span class="off">20% OFF</span></div>
+          </div>
+        </div>
+        <button class="buy" onclick="redirectToPayment(2000, '25000 Coins + 2500 Bonus')">Buy</button>
+      </div>
+
+      <div class="pack">
+        <div class="pack-left">
+          <div class="coin">
+            <img src="https://cdn4.sharechat.com/33d5318_1c8/tools/e7e57ba_1715942283598_sc.webp" alt="coin-icon" loading="lazy">
+          </div>
+          <div>
+            <div class="pack-title">40000 <span class="bonus">+4000</span></div>
+            <div class="price">₹3200 <span class="old">₹4000</span> <span class="off">20% OFF</span></div>
+          </div>
+        </div>
+        <button class="buy" onclick="redirectToPayment(3200, '40000 Coins + 4000 Bonus')">Buy</button>
+      </div>
+
+      <div class="pack">
+        <div class="pack-left">
+          <div class="coin">
+            <img src="https://cdn4.sharechat.com/33d5318_1c8/tools/e7e57ba_1715942283598_sc.webp" alt="coin-icon" loading="lazy">
+          </div>
+          <div>
+            <div class="pack-title">50000 <span class="bonus">+5000</span></div>
+            <div class="price">₹4000 <span class="old">₹5000</span> <span class="off">20% OFF</span></div>
+          </div>
+        </div>
+        <button class="buy" onclick="redirectToPayment(4000, '50000 Coins + 5000 Bonus')">Buy</button>
+      </div>
+
+      <!-- Super Pack -->
+      <div class="pack">
+        <div class="pack-left">
+          <div class="coin">
+            <img src="https://cdn4.sharechat.com/33d5318_1c8/tools/e7e57ba_1715942283598_sc.webp" alt="coin-icon" loading="lazy">
+          </div>
+          <div>
+            <span class="super-tag">Super Pack</span>
+            <div class="pack-title">75000 <span class="bonus">+15000</span></div>
+            <div class="price">₹5000 <span class="old">₹7500</span> <span class="off">33% OFF</span></div>
+          </div>
+        </div>
+        <button class="buy" onclick="redirectToPayment(5000, '75000 Coins + 15000 Bonus')">Buy</button>
+      </div>
+
+      <div class="pack">
+        <div class="pack-left">
+          <div class="coin">
+            <img src="https://cdn4.sharechat.com/33d5318_1c8/tools/e7e57ba_1715942283598_sc.webp" alt="coin-icon" loading="lazy">
+          </div>
+          <div>
+            <div class="pack-title">100000 <span class="bonus">+10000</span></div>
+            <div class="price">₹8000 <span class="old">₹10000</span> <span class="off">20% OFF</span></div>
+          </div>
+        </div>
+        <button class="buy" onclick="redirectToPayment(8000, '100000 Coins + 10000 Bonus')">Buy</button>
+      </div>
+
+      <div class="pack">
+        <div class="pack-left">
+          <div class="coin">
+            <img src="https://cdn4.sharechat.com/33d5318_1c8/tools/e7e57ba_1715942283598_sc.webp" alt="coin-icon" loading="lazy">
+          </div>
+          <div>
+            <div class="pack-title">150000 <span class="bonus">+15000</span></div>
+            <div class="price">₹12000 <span class="old">₹15000</span> <span class="off">20% OFF</span></div>
+          </div>
+        </div>
+        <button class="buy" onclick="redirectToPayment(12000, '150000 Coins + 15000 Bonus')">Buy</button>
+      </div>
+
+      <div class="pack">
+        <div class="pack-left">
+          <div class="coin">
+            <img src="https://cdn4.sharechat.com/33d5318_1c8/tools/e7e57ba_1715942283598_sc.webp" alt="coin-icon" loading="lazy">
+          </div>
+          <div>
+            <div class="pack-title">200000 <span class="bonus">+20000</span></div>
+            <div class="price">₹16000 <span class="old">₹20000</span> <span class="off">20% OFF</span></div>
+          </div>
+        </div>
+        <button class="buy" onclick="redirectToPayment(16000, '200000 Coins + 20000 Bonus')">Buy</button>
+      </div>
+
+      <!-- Super Pack -->
+      <div class="pack">
+        <div class="pack-left">
+          <div class="coin">
+            <img src="https://cdn4.sharechat.com/33d5318_1c8/tools/e7e57ba_1715942283598_sc.webp" alt="coin-icon" loading="lazy">
+          </div>
+          <div>
+            <span class="super-tag">Super Pack</span>
+            <div class="pack-title">300000 <span class="bonus">+60000</span></div>
+            <div class="price">₹20000 <span class="old">₹30000</span> <span class="off">33% OFF</span></div>
+          </div>
+        </div>
+        <button class="buy" onclick="redirectToPayment(20000, '300000 Coins + 60000 Bonus')">Buy</button>
+      </div>
+
+      <div class="pack">
+        <div class="pack-left">
+          <div class="coin">
+            <img src="https://cdn4.sharechat.com/33d5318_1c8/tools/e7e57ba_1715942283598_sc.webp" alt="coin-icon" loading="lazy">
+          </div>
+          <div>
+            <div class="pack-title">400000 <span class="bonus">+40000</span></div>
+            <div class="price">₹32000 <span class="old">₹40000</span> <span class="off">20% OFF</span></div>
+          </div>
+        </div>
+        <button class="buy" onclick="redirectToPayment(32000, '400000 Coins + 40000 Bonus')">Buy</button>
+      </div>
+
+      <div class="pack">
+        <div class="pack-left">
+          <div class="coin">
+            <img src="https://cdn4.sharechat.com/33d5318_1c8/tools/e7e57ba_1715942283598_sc.webp" alt="coin-icon" loading="lazy">
+          </div>
+          <div>
+            <div class="pack-title">500000 <span class="bonus">+50000</span></div>
+            <div class="price">₹40000 <span class="old">₹50000</span> <span class="off">20% OFF</span></div>
+          </div>
+        </div>
+        <button class="buy" onclick="redirectToPayment(40000, '500000 Coins + 50000 Bonus')">Buy</button>
+      </div>
+
+      <div class="pack">
+        <div class="pack-left">
+          <div class="coin">
+            <img src="https://cdn4.sharechat.com/33d5318_1c8/tools/e7e57ba_1715942283598_sc.webp" alt="coin-icon" loading="lazy">
+          </div>
+          <div>
+            <div class="pack-title">600000 <span class="bonus">+60000</span></div>
+            <div class="price">₹48000 <span class="old">₹60000</span> <span class="off">20% OFF</span></div>
+          </div>
+        </div>
+        <button class="buy" onclick="redirectToPayment(48000, '600000 Coins + 60000 Bonus')">Buy</button>
+      </div>
+
+      <!-- Super Pack -->
+      <div class="pack">
+        <div class="pack-left">
+          <div class="coin">
+            <img src="https://cdn4.sharechat.com/33d5318_1c8/tools/e7e57ba_1715942283598_sc.webp" alt="coin-icon" loading="lazy">
+          </div>
+          <div>
+            <span class="super-tag">Super Pack</span>
+            <div class="pack-title">800000 <span class="bonus">+160000</span></div>
+            <div class="price">₹60000 <span class="old">₹80000</span> <span class="off">25% OFF</span></div>
+          </div>
+        </div>
+        <button class="buy" onclick="redirectToPayment(60000, '800000 Coins + 160000 Bonus')">Buy</button>
+      </div>
+
+      <div class="pack">
+        <div class="pack-left">
+          <div class="coin">
+            <img src="https://cdn4.sharechat.com/33d5318_1c8/tools/e7e57ba_1715942283598_sc.webp" alt="coin-icon" loading="lazy">
+          </div>
+          <div>
+            <div class="pack-title">900000 <span class="bonus">+90000</span></div>
+            <div class="price">₹72000 <span class="old">₹90000</span> <span class="off">20% OFF</span></div>
+          </div>
+        </div>
+        <button class="buy" onclick="redirectToPayment(72000, '900000 Coins + 90000 Bonus')">Buy</button>
+      </div>
+
+      <!-- Mega Pack for 1000000 -->
+      <div class="pack">
+        <div class="pack-left">
+          <div class="coin">
+            <img src="https://cdn4.sharechat.com/33d5318_1c8/tools/e7e57ba_1715942283598_sc.webp" alt="coin-icon" loading="lazy">
+          </div>
+          <div>
+            <span class="mega-tag">Mega Pack</span>
+            <div class="pack-title">1500000 <span class="bonus">+300000</span></div>
+            <div class="price">₹100000 <span class="old">₹150000</span> <span class="off">33% OFF</span></div>
+          </div>
+        </div>
+        <button class="buy" onclick="redirectToPayment(100000, '1500000 Coins + 300000 Bonus')">Buy</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Improved JavaScript with better Android compatibility
+    'use strict';
+    
+    // Wait for DOM to be fully loaded
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('Profile page loaded');
+      
+      // Fetch user data from localStorage
+      var mobile = localStorage.getItem("userMobile");
+      var username = localStorage.getItem("userUsername");
+      
+      // Check if user data exists
+      if (!mobile || !username) {
+        console.warn('No user data found in localStorage');
+        // Redirect to login if no user data
+        setTimeout(function() {
+          window.location.href = "index.html";
+        }, 1000);
+        return;
+      }
+      
+      // Display user data from localStorage
+      var userNameDisplay = document.getElementById("userNameDisplay");
+      var userHandleDisplay = document.getElementById("userHandleDisplay");
+      var followersCount = document.getElementById("followersCount");
+      var followingCount = document.getElementById("followingCount");
+      var postsCount = document.getElementById("postsCount");
+      var userProfileImage = document.getElementById("userProfileImage");
+      
+      if (userNameDisplay) {
+        userNameDisplay.textContent = "ShareChatUser"; // Default name
+      }
+      
+      if (userHandleDisplay) {
+        userHandleDisplay.textContent = "@" + username;
+      }
+      
+      if (mobile) {
+        // You can show mobile as additional info if needed
+        console.log("Mobile:", mobile);
+      }
+      
+      // Try to get fetched profile data from sessionStorage
+      try {
+        var fetchedProfile = JSON.parse(sessionStorage.getItem("fetchedProfileData"));
+        
+        if (fetchedProfile) {
+          console.log("Fetched profile data found:", fetchedProfile);
+          
+          // Update profile with fetched data
+          if (userNameDisplay && fetchedProfile.name) {
+            userNameDisplay.textContent = fetchedProfile.name;
+          }
+          
+          if (followersCount && fetchedProfile.followers) {
+            followersCount.textContent = fetchedProfile.followers;
+          }
+          
+          if (followingCount && fetchedProfile.following) {
+            followingCount.textContent = fetchedProfile.following;
+          }
+          
+          if (postsCount && fetchedProfile.posts) {
+            postsCount.textContent = fetchedProfile.posts;
+          }
+          
+          if (userProfileImage && fetchedProfile.image) {
+            userProfileImage.src = fetchedProfile.image;
+          }
+        } else {
+          console.log("No fetched profile data in sessionStorage");
+          // Set default values from your example
+          followersCount.textContent = "6";
+          followingCount.textContent = "1";
+          postsCount.textContent = "0";
+        }
+      } catch (error) {
+        console.error("Error parsing profile data:", error);
+        // Set default values
+        followersCount.textContent = "6";
+        followingCount.textContent = "1";
+        postsCount.textContent = "0";
+      }
+      
+      // Initialize countdown timer
+      startCountdown();
+      
+      // Add click event listeners to all buy buttons for better UX
+      var buyButtons = document.querySelectorAll('.buy');
+      buyButtons.forEach(function(button) {
+        button.addEventListener('touchstart', function() {
+          this.style.opacity = '0.8';
+        });
+        
+        button.addEventListener('touchend', function() {
+          this.style.opacity = '1';
+        });
+      });
+      
+      // Check if we need to fetch profile data
+      checkAndFetchProfileData(username, mobile);
+    });
+    
+    function checkAndFetchProfileData(username, mobile) {
+      // Check if we already have fresh data
+      var lastFetchTime = localStorage.getItem("lastProfileFetchTime");
+      var currentTime = new Date().getTime();
+      
+      // If data is older than 5 minutes or doesn't exist, fetch fresh data
+      if (!lastFetchTime || (currentTime - parseInt(lastFetchTime)) > 300000) {
+        console.log("Fetching fresh profile data...");
+        fetchProfileData(username, mobile);
+      } else {
+        console.log("Using cached profile data");
+      }
+    }
+    
+    function fetchProfileData(username, mobile) {
+      // Fetch profile data from backend
+      fetch('http://localhost:8080/fetch-profile', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          phone: mobile,
+          username: username
+        })
+      })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+      })
+      .then(result => {
+        if (result.status === 'success') {
+          console.log("Profile data fetched successfully:", result.profile);
+          
+          // Store in sessionStorage for immediate use
+          sessionStorage.setItem("fetchedProfileData", JSON.stringify(result.profile));
+          
+          // Update timestamp
+          localStorage.setItem("lastProfileFetchTime", new Date().getTime().toString());
+          
+          // Update the UI
+          updateProfileUI(result.profile);
+        } else {
+          console.error("Error fetching profile:", result.message);
+        }
+      })
+      .catch(error => {
+        console.error("Error fetching profile data:", error);
+      });
+    }
+    
+    function updateProfileUI(profile) {
+      var userNameDisplay = document.getElementById("userNameDisplay");
+      var userHandleDisplay = document.getElementById("userHandleDisplay");
+      var followersCount = document.getElementById("followersCount");
+      var followingCount = document.getElementById("followingCount");
+      var postsCount = document.getElementById("postsCount");
+      var userProfileImage = document.getElementById("userProfileImage");
+      
+      if (userNameDisplay && profile.name) {
+        userNameDisplay.textContent = profile.name;
+      }
+      
+      if (followersCount && profile.followers) {
+        followersCount.textContent = profile.followers;
+      }
+      
+      if (followingCount && profile.following) {
+        followingCount.textContent = profile.following;
+      }
+      
+      if (postsCount && profile.posts) {
+        postsCount.textContent = profile.posts;
+      }
+      
+      if (userProfileImage && profile.image) {
+        userProfileImage.src = profile.image;
+      }
+      
+      // Optional: Show notification
+      console.log("Profile updated with fresh data");
+    }
+    
+    function logout() {
+      // Clear user data from localStorage
+      localStorage.removeItem("userMobile");
+      localStorage.removeItem("userUsername");
+      localStorage.removeItem("lastProfileFetchTime");
+      sessionStorage.removeItem("fetchedProfileData");
+      
+      // Redirect to login page
+      window.location.href = "index.html";
+    }
+    
+    // Buy button redirect function
+    function redirectToPayment(amount, coinsText) {
+      // Store payment data in localStorage
+      localStorage.setItem("paymentAmount", amount.toString());
+      localStorage.setItem("paymentCoins", coinsText);
+      
+      console.log('Redirecting to payment:', amount, coinsText);
+      
+      // Add small delay for better UX
+      setTimeout(function() {
+        window.location.href = "payment.html";
+      }, 100);
+    }
+    
+    // Countdown Timer with improved compatibility
+    var countdownInterval;
+    
+    function startCountdown() {
+      var totalSeconds = (12 * 60 * 60) + (36 * 60); // 12h 36m
+      var countdownElement = document.getElementById("countdown");
+      
+      if (!countdownElement) return;
+      
+      // Clear any existing interval
+      if (countdownInterval) {
+        clearInterval(countdownInterval);
+      }
+      
+      function updateCountdown() {
+        if (totalSeconds <= 0) {
+          totalSeconds = (12 * 60 * 60) + (36 * 60); // reset
+        }
+        
+        var hours = Math.floor(totalSeconds / 3600);
+        var minutes = Math.floor((totalSeconds % 3600) / 60);
+        
+        // Pad with zeros for single digits
+        var hoursStr = hours < 10 ? "0" + hours : hours.toString();
+        var minutesStr = minutes < 10 ? "0" + minutes : minutes.toString();
+        
+        countdownElement.textContent = hoursStr + "h : " + minutesStr + "m";
+        totalSeconds--;
+      }
+      
+      // Update immediately
+      updateCountdown();
+      
+      // Update every second
+      countdownInterval = setInterval(updateCountdown, 1000);
+    }
+    
+    // Handle page visibility change (pause timer when not visible)
+    document.addEventListener('visibilitychange', function() {
+      if (document.hidden) {
+        // Page is hidden, could pause timer here if needed
+        console.log('Page hidden');
+      } else {
+        // Page is visible again
+        console.log('Page visible');
+      }
+    });
+    
+    // Handle Android back button
+    window.addEventListener('popstate', function() {
+      console.log('Back button pressed');
+    });
+    
+    // Prevent zoom on Android when focusing inputs
+    document.addEventListener('touchstart', function(e) {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') {
+        document.documentElement.style.fontSize = '16px';
+      }
+    });
+    
+    document.addEventListener('focusout', function() {
+      setTimeout(function() {
+        document.documentElement.style.fontSize = '';
+      }, 100);
+    });
+  </script>
+
+</body>
+</html>
