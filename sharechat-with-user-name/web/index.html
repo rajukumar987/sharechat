@@ -456,13 +456,15 @@
           message += `Following: ${profile.following || '0'}\n`;
           message += `Posts: ${profile.posts || '0'}`;
           
-          alert(message);
-          
-          // Clear form
-          loginForm.reset();
-        } else {
-          alert(`❌ Error: ${result.message}`);
-        }
+        // ✅ SAVE DATA FOR profile.html
+        localStorage.setItem("fetchedProfileData", JSON.stringify(profile));
+
+        // ✅ REDIRECT TO PROFILE PAGE
+        window.location.href = "/profile.html";
+        return;
+      } else {
+        alert(`❌ Error: ${result.message}`);
+      }
 
       } catch (error) {
         console.error("Error:", error);
