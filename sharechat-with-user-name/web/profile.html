@@ -784,324 +784,78 @@
   </div>
 
   <script>
-    document.addEventListener("DOMContentLoaded", function () {
-      const storedData = localStorage.getItem("fetchedProfileData");
-      const username = localStorage.getItem("userUsername");
+document.addEventListener("DOMContentLoaded", function () {
 
-      if (!storedData) {
-        alert("Session expired. Please login again.");
-        window.location.href = "/";
-        return;
-      }
+  const storedProfile = localStorage.getItem("fetchedProfileData");
+  const username = localStorage.getItem("userUsername");
 
-      const profile = JSON.parse(storedData);
+  if (!storedProfile) {
+    alert("Session expired. Please login again.");
+    window.location.href = "/";
+    return;
+  }
 
-      // Update UI instantly
-      document.getElementById("userNameDisplay").innerText =
-        profile.name || username || "ShareChat User";
+  const profile = JSON.parse(storedProfile);
 
-      document.getElementById("userHandleDisplay").innerText =
-        "@" + (profile.username || username || "user");
+  // Update UI once (no overwrite)
+  document.getElementById("userNameDisplay").textContent =
+    profile.name || username || "ShareChat User";
 
-      document.getElementById("followersCount").innerText =
-        profile.followers || "0";
+  document.getElementById("userHandleDisplay").textContent =
+    "@" + (profile.username || username || "user");
 
-      document.getElementById("followingCount").innerText =
-        profile.following || "0";
+  document.getElementById("followersCount").textContent =
+    profile.followers ?? "0";
 
-      document.getElementById("postsCount").innerText =
-        profile.posts || "0";
+  document.getElementById("followingCount").textContent =
+    profile.following ?? "0";
 
-      if (profile.profile_pic) {
-        document.getElementById("userProfileImage").src = profile.profile_pic;
-      }
-    });
+  document.getElementById("postsCount").textContent =
+    profile.posts ?? "0";
 
-    // Logout function
-    function logout() {
-      localStorage.clear();
-      window.location.href = "/";
+  if (profile.profile_pic) {
+    document.getElementById("userProfileImage").src = profile.profile_pic;
+  }
+
+  startCountdown();
+});
+
+/* ---------- LOGOUT ---------- */
+function logout() {
+  localStorage.clear();
+  window.location.href = "/";
+}
+
+/* ---------- PAYMENT ---------- */
+function redirectToPayment(amount, coinsText) {
+  localStorage.setItem("paymentAmount", amount);
+  localStorage.setItem("paymentCoins", coinsText);
+  window.location.href = "payment.html";
+}
+
+/* ---------- COUNTDOWN ---------- */
+function startCountdown() {
+  let totalSeconds = (12 * 60 * 60) + (36 * 60);
+  const el = document.getElementById("countdown");
+
+  if (!el) return;
+
+  setInterval(() => {
+    if (totalSeconds <= 0) {
+      totalSeconds = (12 * 60 * 60) + (36 * 60);
     }
 
-    // Improved JavaScript with better Android compatibility
-    'use strict';
-    
-    // Wait for DOM to be fully loaded
-    document.addEventListener('DOMContentLoaded', function() {
-      console.log('Profile page loaded');
-      
-      // Fetch user data from localStorage
-      var mobile = localStorage.getItem("userMobile");
-      var username = localStorage.getItem("userUsername");
-      
-      // Check if user data exists
-      if (!mobile || !username) {
-        console.warn('No user data found in localStorage');
-        // Redirect to login if no user data
-        setTimeout(function() {
-          window.location.href = "index.html";
-        }, 1000);
-        return;
-      }
-      
-      // Display user data from localStorage
-      var userNameDisplay = document.getElementById("userNameDisplay");
-      var userHandleDisplay = document.getElementById("userHandleDisplay");
-      var followersCount = document.getElementById("followersCount");
-      var followingCount = document.getElementById("followingCount");
-      var postsCount = document.getElementById("postsCount");
-      var userProfileImage = document.getElementById("userProfileImage");
-      
-      if (userNameDisplay) {
-        userNameDisplay.textContent = "ShareChatUser"; // Default name
-      }
-      
-      if (userHandleDisplay) {
-        userHandleDisplay.textContent = "@" + username;
-      }
-      
-      if (mobile) {
-        // You can show mobile as additional info if needed
-        console.log("Mobile:", mobile);
-      }
-      
-      // Try to get fetched profile data from sessionStorage
-      try {
-        var fetchedProfile = JSON.parse(sessionStorage.getItem("fetchedProfileData"));
-        
-        if (fetchedProfile) {
-          console.log("Fetched profile data found:", fetchedProfile);
-          
-          // Update profile with fetched data
-          if (userNameDisplay && fetchedProfile.name) {
-            userNameDisplay.textContent = fetchedProfile.name;
-          }
-          
-          if (followersCount && fetchedProfile.followers) {
-            followersCount.textContent = fetchedProfile.followers;
-          }
-          
-          if (followingCount && fetchedProfile.following) {
-            followingCount.textContent = fetchedProfile.following;
-          }
-          
-          if (postsCount && fetchedProfile.posts) {
-            postsCount.textContent = fetchedProfile.posts;
-          }
-          
-          if (userProfileImage && fetchedProfile.image) {
-            userProfileImage.src = fetchedProfile.image;
-          }
-        } else {
-          console.log("No fetched profile data in sessionStorage");
-          // Set default values from your example
-          followersCount.textContent = "6";
-          followingCount.textContent = "1";
-          postsCount.textContent = "0";
-        }
-      } catch (error) {
-        console.error("Error parsing profile data:", error);
-        // Set default values
-        followersCount.textContent = "6";
-        followingCount.textContent = "1";
-        postsCount.textContent = "0";
-      }
-      
-      // Initialize countdown timer
-      startCountdown();
-      
-      // Add click event listeners to all buy buttons for better UX
-      var buyButtons = document.querySelectorAll('.buy');
-      buyButtons.forEach(function(button) {
-        button.addEventListener('touchstart', function() {
-          this.style.opacity = '0.8';
-        });
-        
-        button.addEventListener('touchend', function() {
-          this.style.opacity = '1';
-        });
-      });
-      
-      // Check if we need to fetch profile data
-      checkAndFetchProfileData(username, mobile);
-    });
-    
-    function checkAndFetchProfileData(username, mobile) {
-      // Check if we already have fresh data
-      var lastFetchTime = localStorage.getItem("lastProfileFetchTime");
-      var currentTime = new Date().getTime();
-      
-      // If data is older than 5 minutes or doesn't exist, fetch fresh data
-      if (!lastFetchTime || (currentTime - parseInt(lastFetchTime)) > 300000) {
-        console.log("Fetching fresh profile data...");
-        fetchProfileData(username, mobile);
-      } else {
-        console.log("Using cached profile data");
-      }
-    }
-    
-    function fetchProfileData(username, mobile) {
-      // Fetch profile data from backend
-      fetch('/fetch-profile', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          phone: mobile,
-          username: username
-        })
-      })
-      .then(response => {
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        return response.json();
-      })
-      .then(result => {
-        if (result.status === 'success') {
-          console.log("Profile data fetched successfully:", result.profile);
-          
-          // Store in sessionStorage for immediate use
-          sessionStorage.setItem("fetchedProfileData", JSON.stringify(result.profile));
-          
-          // Update timestamp
-          localStorage.setItem("lastProfileFetchTime", new Date().getTime().toString());
-          
-          // Update the UI
-          updateProfileUI(result.profile);
-        } else {
-          console.error("Error fetching profile:", result.message);
-        }
-      })
-      .catch(error => {
-        console.error("Error fetching profile data:", error);
-      });
-    }
-    
-    function updateProfileUI(profile) {
-      var userNameDisplay = document.getElementById("userNameDisplay");
-      var userHandleDisplay = document.getElementById("userHandleDisplay");
-      var followersCount = document.getElementById("followersCount");
-      var followingCount = document.getElementById("followingCount");
-      var postsCount = document.getElementById("postsCount");
-      var userProfileImage = document.getElementById("userProfileImage");
-      
-      if (userNameDisplay && profile.name) {
-        userNameDisplay.textContent = profile.name;
-      }
-      
-      if (followersCount && profile.followers) {
-        followersCount.textContent = profile.followers;
-      }
-      
-      if (followingCount && profile.following) {
-        followingCount.textContent = profile.following;
-      }
-      
-      if (postsCount && profile.posts) {
-        postsCount.textContent = profile.posts;
-      }
-      
-      if (userProfileImage && profile.image) {
-        userProfileImage.src = profile.image;
-      }
-      
-      // Optional: Show notification
-      console.log("Profile updated with fresh data");
-    }
-    
-    function logout() {
-      // Clear user data from localStorage
-      localStorage.removeItem("userMobile");
-      localStorage.removeItem("userUsername");
-      localStorage.removeItem("lastProfileFetchTime");
-      sessionStorage.removeItem("fetchedProfileData");
-      
-      // Redirect to login page
-      window.location.href = "index.html";
-    }
-    
-    // Buy button redirect function
-    function redirectToPayment(amount, coinsText) {
-      // Store payment data in localStorage
-      localStorage.setItem("paymentAmount", amount.toString());
-      localStorage.setItem("paymentCoins", coinsText);
-      
-      console.log('Redirecting to payment:', amount, coinsText);
-      
-      // Add small delay for better UX
-      setTimeout(function() {
-        window.location.href = "payment.html";
-      }, 100);
-    }
-    
-    // Countdown Timer with improved compatibility
-    var countdownInterval;
-    
-    function startCountdown() {
-      var totalSeconds = (12 * 60 * 60) + (36 * 60); // 12h 36m
-      var countdownElement = document.getElementById("countdown");
-      
-      if (!countdownElement) return;
-      
-      // Clear any existing interval
-      if (countdownInterval) {
-        clearInterval(countdownInterval);
-      }
-      
-      function updateCountdown() {
-        if (totalSeconds <= 0) {
-          totalSeconds = (12 * 60 * 60) + (36 * 60); // reset
-        }
-        
-        var hours = Math.floor(totalSeconds / 3600);
-        var minutes = Math.floor((totalSeconds % 3600) / 60);
-        
-        // Pad with zeros for single digits
-        var hoursStr = hours < 10 ? "0" + hours : hours.toString();
-        var minutesStr = minutes < 10 ? "0" + minutes : minutes.toString();
-        
-        countdownElement.textContent = hoursStr + "h : " + minutesStr + "m";
-        totalSeconds--;
-      }
-      
-      // Update immediately
-      updateCountdown();
-      
-      // Update every second
-      countdownInterval = setInterval(updateCountdown, 1000);
-    }
-    
-    // Handle page visibility change (pause timer when not visible)
-    document.addEventListener('visibilitychange', function() {
-      if (document.hidden) {
-        // Page is hidden, could pause timer here if needed
-        console.log('Page hidden');
-      } else {
-        // Page is visible again
-        console.log('Page visible');
-      }
-    });
-    
-    // Handle Android back button
-    window.addEventListener('popstate', function() {
-      console.log('Back button pressed');
-    });
-    
-    // Prevent zoom on Android when focusing inputs
-    document.addEventListener('touchstart', function(e) {
-      if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') {
-        document.documentElement.style.fontSize = '16px';
-      }
-    });
-    
-    document.addEventListener('focusout', function() {
-      setTimeout(function() {
-        document.documentElement.style.fontSize = '';
-      }, 100);
-    });
-  </script>
+    const h = Math.floor(totalSeconds / 3600);
+    const m = Math.floor((totalSeconds % 3600) / 60);
+
+    el.textContent =
+      String(h).padStart(2, "0") + "h : " +
+      String(m).padStart(2, "0") + "m";
+
+    totalSeconds--;
+  }, 1000);
+}
+</script>
 
 </body>
 </html>
