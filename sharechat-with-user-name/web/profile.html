@@ -903,7 +903,7 @@
     
     function fetchProfileData(username, mobile) {
       // Fetch profile data from backend
-      fetch('http://localhost:8080/fetch-profile', {
+      fetch('/fetch-profile', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
